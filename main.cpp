@@ -109,7 +109,7 @@ int main(int argc, char *argv[])
     auto showSettings = [&]() {
         if (!settingsWin)
         {
-            settingsWin = new SettingsWindow(&chatWin, &charWin);
+            settingsWin = new SettingsWindow(&chatWin, &charWin, &chatWin);
             /* 设置窗口的信号连接 */
             QObject::connect(settingsWin, &SettingsWindow::requestReloadAi,
                              &chatWin, &ChatDialog::reloadAiConfig);

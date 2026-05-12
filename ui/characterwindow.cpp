@@ -38,7 +38,8 @@ CharacterWindow::CharacterWindow(QWidget *parent)
 #endif
     setWindowFlags(flags);
 
-    new DragHelper(this);
+    auto *drag = new DragHelper(this);
+    connect(drag, &DragHelper::dragFinished, this, &CharacterWindow::savePosition);
 
     /* 延迟加载默认立绘 */
     QTimer::singleShot(0, this, [this]() { setTachieImage("default"); });

@@ -11,6 +11,9 @@ class DragHelper : public QObject
 public:
     explicit DragHelper(QWidget *target);
 
+signals:
+    void dragFinished();
+
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 

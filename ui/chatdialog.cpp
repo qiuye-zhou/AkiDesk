@@ -196,6 +196,8 @@ void ChatDialog::appendHistory(const QString &line)
     if (!line.isEmpty())
     {
         m_context.append(line);
+        while (m_context.size() > 40)
+            m_context.removeFirst();
         saveContext();
     }
 }

@@ -45,8 +45,9 @@ private:
     QString m_model;
     QString m_speaker;
 
-    QStringList m_pendingTexts;            // 待合成文本队列
-    QList<QTemporaryFile *> m_readyFiles;  // 合成完成的音频文件队列
+    QStringList m_pendingTexts;
+    QList<QTemporaryFile *> m_readyFiles;
     QTemporaryFile *m_currentFile = nullptr;
     bool m_synthesizing = false;
+    bool m_stopped = false;
 };

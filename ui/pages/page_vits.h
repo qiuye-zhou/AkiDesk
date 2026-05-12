@@ -2,6 +2,7 @@
 
 #include <QWidget>
 
+class QNetworkAccessManager;
 class QStringListModel;
 
 namespace Ui { class PageVits; }
@@ -25,5 +26,6 @@ private slots:
 
 private:
     Ui::PageVits *ui;
+    QNetworkAccessManager *m_network;
     QStringListModel *m_speakerListModel;
 };

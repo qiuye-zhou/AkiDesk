@@ -39,7 +39,11 @@ bool DragHelper::eventFilter(QObject *watched, QEvent *event)
     }
     case QEvent::MouseButtonRelease:
     {
-        m_dragging = false;
+        if (m_dragging)
+        {
+            m_dragging = false;
+            emit dragFinished();
+        }
         break;
     }
     default:

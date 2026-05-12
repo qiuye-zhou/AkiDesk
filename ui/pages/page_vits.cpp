@@ -12,7 +12,7 @@
 #include <QStringListModel>
 
 PageVits::PageVits(QWidget *parent)
-    : QWidget(parent), ui(new Ui::PageVits)
+    : QWidget(parent), ui(new Ui::PageVits), m_network(new QNetworkAccessManager(this))
 {
     ui->setupUi(this);
 
@@ -52,15 +52,13 @@ void PageVits::onSentenceSplitToggled(bool checked)
 /* 向 vits-simple-api 的 /voice/speakers 接口请求模型说话人列表 */
 void PageVits::onFetchSpeakers()
 {
-    auto *mgr = new QNetworkAccessManager(this);
     QUrl url(ui->editApiUrl->text() + "/voice/speakers");
-    QNetworkReply *reply = mgr->get(QNetworkRequest(url));
+    QNetworkReply *reply = m_network->get(QNetworkRequest(url));
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply, mgr]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         if (reply->error() != QNetworkReply::NoError)
         {
             reply->deleteLater();
-            mgr->deleteLater();
             return;
         }
 
@@ -68,7 +66,6 @@ void PageVits::onFetchSpeakers()
         if (!doc.isObject())
         {
             reply->deleteLater();
-            mgr->deleteLater();
             return;
         }
 
@@ -89,7 +86,6 @@ void PageVits::onFetchSpeakers()
 
         m_speakerListModel->setStringList(list);
 
-        /* 保存到全局配置 */
         JsonConfig cfg(GlobalConfigPath);
         QJsonArray arr;
         for (const QString &s : list)
@@ -98,6 +94,5 @@ void PageVits::onFetchSpeakers()
 
         emit vitsModelListRefreshed();
         reply->deleteLater();
-        mgr->deleteLater();
     });
 }

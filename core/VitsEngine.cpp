@@ -40,12 +40,14 @@ void VitsEngine::enqueueAndPlay(const QString &text)
 {
     if (text.trimmed().isEmpty())
         return;
+    m_stopped = false;
     m_pendingTexts.append(text.trimmed());
     startNextSynthesis();
 }
 
 void VitsEngine::stopAll()
 {
+    m_stopped = true;
     m_pendingTexts.clear();
     m_synthesizing = false;
     m_player->stop();
@@ -67,7 +69,7 @@ bool VitsEngine::isIdle() const
 /* 发起下一个合成请求 */
 void VitsEngine::startNextSynthesis()
 {
-    if (m_synthesizing || m_pendingTexts.isEmpty())
+    if (m_stopped || m_synthesizing || m_pendingTexts.isEmpty())
         return;
 
     m_synthesizing = true;
@@ -84,7 +86,7 @@ void VitsEngine::startNextSynthesis()
 
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
         m_synthesizing = false;
-        if (reply->error() == QNetworkReply::NoError)
+        if (!m_stopped && reply->error() == QNetworkReply::NoError)
         {
             QByteArray audioData = reply->readAll();
             if (!audioData.isEmpty())
@@ -105,7 +107,6 @@ void VitsEngine::startNextSynthesis()
             }
         }
         reply->deleteLater();
-        /* 合成完成后立即尝试发起下一个合成请求 */
         startNextSynthesis();
     });
 }

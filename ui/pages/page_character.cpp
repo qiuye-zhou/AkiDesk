@@ -275,10 +275,15 @@ void PageCharacter::onDeleteCharacter()
         QString("确定要删除角色 %1 吗？此操作不可恢复。").arg(name));
     if (btn != QMessageBox::Yes) return;
 
-    QDir dir(QDir(CharacterAssetsPath).filePath(name));
-    if (!dir.exists() || !dir.removeRecursively())
+    QDir assetDir(QDir(CharacterAssetsPath).filePath(name));
+    QDir configDir(QDir(CharacterConfigPath).filePath(name));
+
+    bool assetOk = !assetDir.exists() || assetDir.removeRecursively();
+    bool configOk = !configDir.exists() || configDir.removeRecursively();
+
+    if (!assetOk || !configOk)
     {
-        QMessageBox::warning(this, "删除失败", "无法删除角色目录");
+        QMessageBox::warning(this, "删除失败", "无法完全删除角色文件");
         return;
     }
     refreshCharList();
