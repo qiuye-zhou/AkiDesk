@@ -20,7 +20,7 @@ void AiProvider::setServiceType(ServiceType type)
     switch (type)
     {
     case OpenAI:
-        m_apiUrl = "https://api.openai.com/v1";
+        m_apiUrl = "https://api.openai.com";
         break;
     case DeepSeek:
         m_apiUrl = "https://api.deepseek.com/v1";

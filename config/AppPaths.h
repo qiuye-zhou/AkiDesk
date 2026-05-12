@@ -15,12 +15,12 @@ inline const QString LocalConfigPath =
     QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
         .filePath("AkiDesk/config.ini");
 
-/* 角色资产根目录（只读资源：立绘、角色Prompt） */
+/* 角色资产根目录（立绘、角色Prompt 等） */
 inline const QString CharacterAssetsPath =
     QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
-        .filePath("AkiDesk/Character/Assets");
+        .filePath("AkiDesk/Character");
 
-/* 角色用户配置根目录（运行时配置、上下文历史） */
+/* 用户配置根目录（运行时配置） */
 inline const QString CharacterConfigPath =
     QDir(QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation))
         .filePath("AkiDesk/Character/Config");
@@ -56,13 +56,10 @@ inline QString CurrentCharacterAssetConfig()
     return QDir(CharacterAssetsPath).filePath(name + "/config.json");
 }
 
-/* 获取当前角色的用户运行配置路径（立绘大小、模型选择等） */
+/* 获取用户运行配置路径（立绘大小、模型选择等） */
 inline QString CurrentCharacterUserConfig()
 {
-    const QString name = CurrentCharacterName();
-    if (name.isEmpty())
-        return {};
-    return QDir(CharacterConfigPath).filePath(name + "/config.json");
+    return QDir(CharacterConfigPath).filePath("config.json");
 }
 
 /* 获取当前角色的对话上下文路径 */
@@ -71,5 +68,5 @@ inline QString CurrentCharacterContextPath()
     const QString name = CurrentCharacterName();
     if (name.isEmpty())
         return {};
-    return QDir(CharacterConfigPath).filePath(name + "/context.json");
+    return QDir(CharacterAssetsPath).filePath(name + "/context.json");
 }

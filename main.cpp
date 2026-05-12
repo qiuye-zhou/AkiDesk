@@ -57,10 +57,8 @@ int main(int argc, char *argv[])
     const QString iniPath = LocalConfigPath;
     if (!QFile::exists(iniPath))
     {
-        /* 部署默认角色资产 */
-        copyResourceDir(":/defaults/Character/Assets", QDir(projectDir).filePath("Character/Assets"));
-        /* 部署默认角色用户配置 */
-        copyResourceDir(":/defaults/Character/Config", QDir(projectDir).filePath("Character/Config"));
+        /* 部署默认角色资产和用户配置 */
+        copyResourceDir(":/defaults/Character", QDir(projectDir).filePath("Character"));
         /* 部署默认动画插件 */
         copyResourceDir(":/defaults/Plugin/Anime", QDir(projectDir).filePath("Plugin/Anime"));
         /* 部署默认本地配置 */
@@ -70,7 +68,7 @@ int main(int argc, char *argv[])
     /* 确保所有数据目录存在 */
     QStringList dirs = {
         projectDir,
-        QDir(projectDir).filePath("Character/Assets"),
+        QDir(projectDir).filePath("Character"),
         QDir(projectDir).filePath("Character/Config"),
         QDir(projectDir).filePath("Plugin/Anime")
     };
@@ -109,7 +107,7 @@ int main(int argc, char *argv[])
     auto showSettings = [&]() {
         if (!settingsWin)
         {
-            settingsWin = new SettingsWindow(&chatWin, &charWin, &chatWin);
+            settingsWin = new SettingsWindow(&chatWin, &charWin);
             /* 设置窗口的信号连接 */
             QObject::connect(settingsWin, &SettingsWindow::requestReloadAi,
                              &chatWin, &ChatDialog::reloadAiConfig);

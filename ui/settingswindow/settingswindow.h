@@ -20,6 +20,9 @@ signals:
     void requestSetTachieSize(int size);
     void requestResetTachieLoc();
 
+protected:
+    void closeEvent(QCloseEvent *event) override;
+
 private:
     void setupUi();
     ChatDialog *m_chat;

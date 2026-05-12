@@ -8,6 +8,7 @@
 #include "pages/page_plugin.h"
 #include "pages/page_about.h"
 
+#include <QCloseEvent>
 #include <QTabWidget>
 #include <QVBoxLayout>
 
@@ -22,6 +23,16 @@ void SettingsWindow::setupUi()
 {
     setWindowTitle("设置");
     resize(600, 500);
+    setAttribute(Qt::WA_TranslucentBackground, false);
+
+    Qt::WindowFlags flags = Qt::Dialog | Qt::WindowStaysOnTopHint;
+    setWindowFlags(flags);
+
+    QPalette pal = palette();
+    pal.setColor(QPalette::Window, Qt::white);
+    pal.setColor(QPalette::Base, Qt::white);
+    pal.setColor(QPalette::AlternateBase, QColor(0xF5, 0xF5, 0xF5));
+    setPalette(pal);
 
     auto *tabs = new QTabWidget(this);
 
@@ -53,4 +64,10 @@ void SettingsWindow::setupUi()
     /* VITS 页面信号 */
     connect(pageVits, &PageVits::vitsModelListRefreshed, pageChar,
             &PageCharacter::refreshVitsModelList);
+}
+
+void SettingsWindow::closeEvent(QCloseEvent *event)
+{
+    event->ignore();
+    hide();
 }

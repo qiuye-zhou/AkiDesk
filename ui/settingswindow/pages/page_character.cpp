@@ -136,6 +136,7 @@ void PageCharacter::refreshCharList()
 {
     QDir dir(CharacterAssetsPath);
     QStringList names = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    names.removeAll("Config");
     ui->comboChar->clear();
     ui->comboChar->addItems(names);
 }
@@ -276,12 +277,9 @@ void PageCharacter::onDeleteCharacter()
     if (btn != QMessageBox::Yes) return;
 
     QDir assetDir(QDir(CharacterAssetsPath).filePath(name));
-    QDir configDir(QDir(CharacterConfigPath).filePath(name));
+    bool ok = !assetDir.exists() || assetDir.removeRecursively();
 
-    bool assetOk = !assetDir.exists() || assetDir.removeRecursively();
-    bool configOk = !configDir.exists() || configDir.removeRecursively();
-
-    if (!assetOk || !configOk)
+    if (!ok)
     {
         QMessageBox::warning(this, "删除失败", "无法完全删除角色文件");
         return;
