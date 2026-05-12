@@ -36,9 +36,6 @@ protected:
 private slots:
     void on_btnNext_clicked();
 
-private slots:
-    void on_btnNext_clicked();
-
 private:
     void initWindow();
     void loadContext();
