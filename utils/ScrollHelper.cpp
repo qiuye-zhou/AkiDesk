@@ -1,5 +1,6 @@
 #include "ScrollHelper.h"
 
+#include <QAbstractScrollArea>
 #include <QEvent>
 #include <QScrollBar>
 #include <QWheelEvent>
@@ -10,8 +11,9 @@ ScrollHelper::ScrollHelper(QWidget *target, QScrollBar *scrollBar,
     : QObject(parent), m_scrollBar(scrollBar), m_stepSize(stepSize)
 {
     target->installEventFilter(this);
-    if (target->viewport())
-        target->viewport()->installEventFilter(this);
+    auto *scrollArea = qobject_cast<QAbstractScrollArea *>(target);
+    if (scrollArea && scrollArea->viewport())
+        scrollArea->viewport()->installEventFilter(this);
 }
 
 /* 将滚轮事件转换为滚动条的值变化 */
