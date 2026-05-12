@@ -33,6 +33,12 @@ protected:
     void moveEvent(QMoveEvent *event) override;
     bool eventFilter(QObject *watched, QEvent *event) override;
 
+private slots:
+    void on_btnNext_clicked();
+
+private slots:
+    void on_btnNext_clicked();
+
 private:
     void initWindow();
     void loadContext();
