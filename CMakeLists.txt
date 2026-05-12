@@ -100,6 +100,11 @@ target_link_libraries(AkiDesk PRIVATE
     Qt6::Svg
 )
 
+if(UNIX AND NOT APPLE)
+    find_package(X11 REQUIRED)
+    target_link_libraries(AkiDesk PRIVATE X11::X11 X11::Xext)
+endif()
+
 include(GNUInstallDirs)
 install(TARGETS AkiDesk
     BUNDLE DESTINATION .
