@@ -224,9 +224,15 @@ void ChatDialog::stopPendingState()
 }
 
 /* 按下回车发送消息 */
+void ChatDialog::keyPressEvent(QKeyEvent *event)
+{
+    m_pressedKeys.append(event->key());
+}
+
 void ChatDialog::keyReleaseEvent(QKeyEvent *event)
 {
-    if (event->key() == Qt::Key_Return && !(event->modifiers() & Qt::ShiftModifier))
+    m_pressedKeys.removeAll(event->key());
+    if (event->key() == Qt::Key_Return && !m_pressedKeys.contains(Qt::Key_Shift))
     {
         /* 获取用户输入 */
         QTextCursor cursor = ui->textEdit->textCursor();
@@ -301,34 +307,7 @@ void ChatDialog::on_btnNext_clicked()
 
 void ChatDialog::toggleVisible() { setVisible(!isVisible()); }
 
-/* 重新加载 AI 配置（切换角色或修改设置后调用） */
-void ChatDialog::reloadAiConfig()
-{
-    JsonConfig charCfg(CurrentCharacterUserConfig());
-    QString server = charCfg.value("serverSelect").toString();
-    if (server == "OpenAI")
-        m_ai->setServiceType(AiProvider::OpenAI);
-    else
-        m_ai->setServiceType(AiProvider::DeepSeek);
-
-    m_ai->setModel(charCfg.value("modelSelect").toString());
-
-    JsonConfig globalCfg(GlobalConfigPath);
-    m_ai->setApiKey(globalCfg.value("llm/" + server + "/ApiKey").toString());
-
-    if (m_vitsEnabled)
-    {
-        m_vits->setApiUrl(globalCfg.value("vits/ApiUrl").toString());
-        QString mas = charCfg.value("vitsMasSelect").toString();
-        m_vits->setModel(mas.section(" - ", 0, 0).trimmed());
-        m_vits->setSpeaker(mas.section(" - ", 2, 2).trimmed());
-    }
-
-    loadContext();
-}
-
-/* 打开历史面板 */
-void ChatDialog::showHistoryPanel()
+void ChatDialog::on_btnHistory_clicked()
 {
     if (!m_historyPanel)
     {
@@ -356,7 +335,7 @@ void ChatDialog::showHistoryPanel()
                 ui->btnNext->show();
             }
             if (m_historyVisible)
-                hideHistoryPanel();
+                on_btnHistory_clicked();
         });
     }
 
@@ -373,75 +352,100 @@ void ChatDialog::showHistoryPanel()
     }
 
     m_historyPanel->move(x(), y() - m_historyPanel->height());
-    m_historyPanel->show();
-    m_historyPanel->raise();
-    m_historyVisible = true;
 
-    /* 弹出动画：从下方滑入 + 淡入 */
-    auto *opacity = new QGraphicsOpacityEffect(m_historyPanel);
-    m_historyPanel->setGraphicsEffect(opacity);
-    opacity->setOpacity(0.0);
+    if (!m_historyVisible)
+    {
+        m_historyPanel->show();
+        m_historyPanel->raise();
+        m_historyVisible = true;
 
-    QRect start = m_historyPanel->geometry();
-    QRect end = start;
-    start.moveTop(start.top() + 20);
-    m_historyPanel->setGeometry(start);
+        auto *opacity = new QGraphicsOpacityEffect(m_historyPanel);
+        m_historyPanel->setGraphicsEffect(opacity);
+        opacity->setOpacity(0.0);
 
-    auto *fadeAnim = new QPropertyAnimation(opacity, "opacity");
-    fadeAnim->setDuration(150);
-    fadeAnim->setStartValue(0.0);
-    fadeAnim->setEndValue(1.0);
-    auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
-    moveAnim->setDuration(150);
-    moveAnim->setStartValue(start);
-    moveAnim->setEndValue(end);
+        QRect start = m_historyPanel->geometry();
+        QRect end = start;
+        start.moveTop(start.top() + 20);
+        m_historyPanel->setGeometry(start);
 
-    auto *group = new QParallelAnimationGroup(m_historyPanel);
-    group->addAnimation(fadeAnim);
-    group->addAnimation(moveAnim);
-    group->start(QAbstractAnimation::DeleteWhenStopped);
+        auto *fadeAnim = new QPropertyAnimation(opacity, "opacity");
+        fadeAnim->setDuration(150);
+        fadeAnim->setStartValue(0.0);
+        fadeAnim->setEndValue(1.0);
+        auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
+        moveAnim->setDuration(150);
+        moveAnim->setStartValue(start);
+        moveAnim->setEndValue(end);
+
+        auto *group = new QParallelAnimationGroup(m_historyPanel);
+        group->addAnimation(fadeAnim);
+        group->addAnimation(moveAnim);
+        group->start(QAbstractAnimation::DeleteWhenStopped);
+    }
+    else
+    {
+        m_historyVisible = false;
+
+        auto *opacity = qobject_cast<QGraphicsOpacityEffect *>(m_historyPanel->graphicsEffect());
+        if (!opacity)
+        {
+            opacity = new QGraphicsOpacityEffect(m_historyPanel);
+            m_historyPanel->setGraphicsEffect(opacity);
+        }
+
+        QRect startR = m_historyPanel->geometry();
+        QRect endR = startR;
+        endR.moveTop(endR.top() + 20);
+
+        auto *fadeAnim = new QPropertyAnimation(opacity, "opacity");
+        fadeAnim->setDuration(150);
+        fadeAnim->setStartValue(1.0);
+        fadeAnim->setEndValue(0.0);
+        auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
+        moveAnim->setDuration(150);
+        moveAnim->setStartValue(startR);
+        moveAnim->setEndValue(endR);
+
+        auto *group = new QParallelAnimationGroup(m_historyPanel);
+        group->addAnimation(fadeAnim);
+        group->addAnimation(moveAnim);
+        connect(group, &QParallelAnimationGroup::finished, m_historyPanel, &QWidget::hide);
+        group->start(QAbstractAnimation::DeleteWhenStopped);
+    }
 }
 
-void ChatDialog::hideHistoryPanel()
+void ChatDialog::reloadAiConfig()
 {
-    if (!m_historyPanel || !m_historyVisible)
-        return;
-    m_historyVisible = false;
+    JsonConfig charCfg(CurrentCharacterUserConfig());
+    QString server = charCfg.value("serverSelect").toString();
+    if (server == "OpenAI")
+        m_ai->setServiceType(AiProvider::OpenAI);
+    else
+        m_ai->setServiceType(AiProvider::DeepSeek);
 
-    auto *opacity = qobject_cast<QGraphicsOpacityEffect *>(m_historyPanel->graphicsEffect());
-    if (!opacity)
+    m_ai->setModel(charCfg.value("modelSelect").toString());
+
+    JsonConfig globalCfg(GlobalConfigPath);
+    m_ai->setApiKey(globalCfg.value("llm/" + server + "/ApiKey").toString());
+
+    if (m_vitsEnabled)
     {
-        opacity = new QGraphicsOpacityEffect(m_historyPanel);
-        m_historyPanel->setGraphicsEffect(opacity);
+        m_vits->setApiUrl(globalCfg.value("vits/ApiUrl").toString());
+        QString mas = charCfg.value("vitsMasSelect").toString();
+        m_vits->setModel(mas.section(" - ", 0, 0).trimmed());
+        m_vits->setSpeaker(mas.section(" - ", 2, 2).trimmed());
     }
 
-    QRect startR = m_historyPanel->geometry();
-    QRect endR = startR;
-    endR.moveTop(endR.top() + 20);
-
-    auto *fadeAnim = new QPropertyAnimation(opacity, "opacity");
-    fadeAnim->setDuration(150);
-    fadeAnim->setStartValue(1.0);
-    fadeAnim->setEndValue(0.0);
-    auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
-    moveAnim->setDuration(150);
-    moveAnim->setStartValue(startR);
-    moveAnim->setEndValue(endR);
-
-    auto *group = new QParallelAnimationGroup(m_historyPanel);
-    group->addAnimation(fadeAnim);
-    group->addAnimation(moveAnim);
-    connect(group, &QParallelAnimationGroup::finished, m_historyPanel, &QWidget::hide);
-    group->start(QAbstractAnimation::DeleteWhenStopped);
+    loadContext();
 }
 
 /* 滚轮上滑打开历史面板，下滑关闭 */
 void ChatDialog::wheelEvent(QWheelEvent *event)
 {
     if (event->angleDelta().y() > 0 && !m_historyVisible)
-        showHistoryPanel();
+        ui->btnHistory->click();
     else if (event->angleDelta().y() < 0 && m_historyVisible)
-        hideHistoryPanel();
+        ui->btnHistory->click();
     QWidget::wheelEvent(event);
 }
 
@@ -465,26 +469,25 @@ bool ChatDialog::eventFilter(QObject *watched, QEvent *event)
     {
         auto *we = static_cast<QWheelEvent *>(event);
         if (we->angleDelta().y() > 0 && !m_historyVisible)
-            showHistoryPanel();
+            ui->btnHistory->click();
         else if (we->angleDelta().y() < 0 && m_historyVisible)
-            hideHistoryPanel();
+            ui->btnHistory->click();
         return true;
     }
     return QWidget::eventFilter(watched, event);
 }
 
-/* 寻找中/英/日文句末标点位置 */
 int ChatDialog::findSentenceEnd(const QString &text, int from)
 {
     for (int i = qMax(0, from); i < text.size(); ++i)
     {
         const QChar ch = text.at(i);
         if (ch == '.' || ch == '!' || ch == '?' || ch == '\n' ||
-            ch == QChar(0x3002) || /* 。 */
-            ch == QChar(0xFF01) || /* ！ */
-            ch == QChar(0xFF1F) || /* ？ */
-            ch == QChar(0x3001) || /* 、 */
-            ch == QChar(0xFF1B) || /* ； */
+            ch == QChar(0x3002) ||
+            ch == QChar(0xFF01) ||
+            ch == QChar(0xFF1F) ||
+            ch == QChar(0x3001) ||
+            ch == QChar(0xFF1B) ||
             ch == ';')
             return i;
     }

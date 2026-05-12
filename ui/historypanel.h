@@ -4,7 +4,6 @@
 
 namespace Ui { class HistoryPanel; }
 
-/* 历史对话面板：展示上下文记录，支持点击回溯 */
 class HistoryPanel : public QWidget
 {
     Q_OBJECT
