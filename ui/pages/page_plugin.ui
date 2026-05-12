@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PagePlugin</class>
+ <widget class="QWidget" name="PagePlugin">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+
+   <item>
+    <layout class="QHBoxLayout" name="h1">
+     <item>
+      <widget class="QLabel" name="lblTitle">
+       <property name="text"><string>已安装的动画插件</string></property>
+       <property name="font"><font><pointsize>12</pointsize><weight>75</weight><bold>true</bold></font></property>
+      </widget>
+     </item>
+     <item alignment="Qt::AlignRight">
+      <widget class="QPushButton" name="btnRefresh">
+       <property name="text"><string>刷新</string></property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+
+   <item>
+    <widget class="QListWidget" name="listPlugins">
+     <property name="minimumSize"><size><width>0</width><height>150</height></size></property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QLabel" name="lblErrors">
+     <property name="text"><string>加载错误</string></property>
+     <property name="font"><font><pointsize>10</pointsize><weight>75</weight><bold>true</bold></font></property>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QListWidget" name="listErrors">
+     <property name="maximumSize"><size><width>16777215</width><height>120</height></size></property>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,45 @@
+#define MyAppVersion "@PROJECT_VERSION@"
+
+[Setup]
+AppId={{3B8E4F7A-D2C5-4A6B-9E1F-8C7D6B5A4E3F}
+AppName=AkiDesk
+AppVersion={#MyAppVersion}
+AppPublisher=AkiDesk
+DefaultDirName={autopf}\AkiDesk
+DefaultGroupName=AkiDesk
+OutputDir=output
+OutputBaseFilename=AkiDesk_Setup
+Compression=lzma
+SolidCompression=yes
+WizardStyle=modern
+
+[Languages]
+Name: "chinesesimp"; MessagesFile: "compiler:Default.isl"
+
+[Files]
+;主程序
+Source: "..\dist\AkiDesk.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+;dist根目录dll
+Source: "..\dist\*.dll"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
+
+;Qt部署目录(windeployqt默认不是plugins结构，而是platforms/imageformats/...)
+Source: "..\dist\platforms\*"; DestDir: "{app}\platforms"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\imageformats\*"; DestDir: "{app}\imageformats"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\styles\*"; DestDir: "{app}\styles"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\iconengines\*"; DestDir: "{app}\iconengines"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\multimedia\*"; DestDir: "{app}\multimedia"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\tls\*"; DestDir: "{app}\tls"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\generic\*"; DestDir: "{app}\generic"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\networkinformation\*"; DestDir: "{app}\networkinformation"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+Source: "..\dist\translations\*"; DestDir: "{app}\translations"; Flags: ignoreversion recursesubdirs createallsubdirs skipifsourcedoesntexist
+
+;注意：AkiDesk的默认配置(角色包、动画插件等)通过Qt资源系统(qrc)嵌入到exe中，
+;首次运行时main.cpp会自动部署到用户文档目录，因此这里不需要额外复制默认配置文件。
+
+[Icons]
+Name: "{group}\AkiDesk"; Filename: "{app}\AkiDesk.exe"
+Name: "{commondesktop}\AkiDesk"; Filename: "{app}\AkiDesk.exe"
+
+[Run]
+Filename: "{app}\AkiDesk.exe"; Description: "启动 AkiDesk"; Flags: nowait postinstall skipifsilent

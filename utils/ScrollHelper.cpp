@@ -1,0 +1,29 @@
+#include "ScrollHelper.h"
+
+#include <QEvent>
+#include <QScrollBar>
+#include <QWheelEvent>
+#include <QWidget>
+
+ScrollHelper::ScrollHelper(QWidget *target, QScrollBar *scrollBar,
+                           int stepSize, QObject *parent)
+    : QObject(parent), m_scrollBar(scrollBar), m_stepSize(stepSize)
+{
+    target->installEventFilter(this);
+    if (target->viewport())
+        target->viewport()->installEventFilter(this);
+}
+
+/* 将滚轮事件转换为滚动条的值变化 */
+bool ScrollHelper::eventFilter(QObject *watched, QEvent *event)
+{
+    if (event->type() == QEvent::Wheel)
+    {
+        auto *we = static_cast<QWheelEvent *>(event);
+        const int delta = we->angleDelta().y();
+        const int step = (delta > 0 ? -m_stepSize : m_stepSize);
+        m_scrollBar->setValue(m_scrollBar->value() + step);
+        return true;
+    }
+    return QObject::eventFilter(watched, event);
+}

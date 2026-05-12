@@ -1,0 +1,7 @@
+{
+  "tachieSize": "100",
+  "serverSelect": "DeepSeek",
+  "modelSelect": "deepseek-chat",
+  "vitsEnable": false,
+  "vitsMasSelect": ""
+}

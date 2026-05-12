@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PageAbout</class>
+ <widget class="QWidget" name="PageAbout">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>400</width><height>300</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout" alignment="Qt::AlignCenter">
+   <item>
+    <widget class="QLabel" name="labelTitle">
+     <property name="text"><string>AkiDesk</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="font"><font><pointsize>20</pointsize><weight>75</weight><bold>true</bold></font></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelSubtitle">
+     <property name="text"><string>Galgame 风格 AI 桌宠</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelVersion">
+     <property name="text"><string>版本：1.0.0</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="labelGithub">
+     <property name="text"><string>&lt;a href=&quot;https://github.com/qiuye-zhou/AkiDesk&quot;&gt;GitHub 仓库&lt;/a&gt;</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="openExternalLinks"><bool>true</bool></property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

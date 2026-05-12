@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PageLLM</class>
+ <widget class="QWidget" name="PageLLM">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <item>
+    <widget class="QGroupBox" name="grpServer">
+     <property name="title"><string>服务商选择</string></property>
+     <layout class="QHBoxLayout" name="hLayout1">
+      <item>
+       <widget class="QComboBox" name="comboServer">
+        <item><property name="text"><string>DeepSeek</string></property></item>
+        <item><property name="text"><string>OpenAI</string></property></item>
+        <item><property name="text"><string>Custom</string></property></item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="labelStatus">
+        <property name="text"><string>未配置</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="grpApiKey">
+     <property name="title"><string>API Key</string></property>
+     <layout class="QHBoxLayout" name="hLayout2">
+      <item>
+       <widget class="QLineEdit" name="editApiKey">
+        <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+        <property name="placeholderText"><string>输入你的 API Key</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnFetchModels">
+        <property name="text"><string>获取模型列表</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="grpModels">
+     <property name="title"><string>可用模型列表</string></property>
+     <layout class="QVBoxLayout" name="vLayoutModels">
+      <item>
+       <widget class="QListView" name="listModels"/>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

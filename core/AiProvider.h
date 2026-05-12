@@ -1,0 +1,76 @@
+#pragma once
+
+#include <QByteArray>
+#include <QHash>
+#include <QObject>
+#include <QString>
+#include <QStringList>
+
+class QNetworkAccessManager;
+class QNetworkReply;
+
+/* OpenAI 兼容 API 封装，支持流式 SSE 和非流式两种模式 */
+class AiProvider : public QObject
+{
+    Q_OBJECT
+
+public:
+    enum ServiceType {
+        OpenAI,
+        DeepSeek,
+        Custom
+    };
+
+    struct ModelInfo {
+        QString id;
+        QString created;
+        QString ownedBy;
+    };
+
+    explicit AiProvider(QObject *parent = nullptr);
+
+    void setServiceType(ServiceType type);
+    void setApiKey(const QString &apiKey);
+    void setApiUrl(const QString &url);
+    void setModel(const QString &model);
+    void setStreamEnabled(bool enabled);
+    void setSystemPrompt(const QString &prompt);
+
+    QString currentModel() const { return m_model; }
+    ServiceType currentServiceType() const { return m_serviceType; }
+
+    /* 拉取可用模型列表 */
+    void fetchModels();
+
+    /* 发起对话请求 */
+    void chat(const QString &userMessage);
+
+signals:
+    /* 非流式完整回复 */
+    void replyReceived(const QString &reply);
+    /* 流式每收到一个 chunk 触发 */
+    void replyChunkReceived(const QString &chunk);
+    /* 请求出错 */
+    void errorOccurred(const QString &error);
+    /* 模型列表返回 */
+    void modelsReceived(const QList<ModelInfo> &models);
+
+private slots:
+    void handleModelsReply();
+
+private:
+    void handleStreamReadyRead(QNetworkReply *reply);
+    void finalizeStreamReply(QNetworkReply *reply);
+
+    QNetworkAccessManager *m_network;
+    QString m_apiKey;
+    QString m_apiUrl;
+    QString m_model;
+    bool m_streamEnabled = true;
+    QString m_systemPrompt;
+    ServiceType m_serviceType = DeepSeek;
+
+    /* 每个流式请求维护独立的缓冲区 */
+    QHash<QNetworkReply *, QByteArray> m_streamBuffers;
+    QHash<QNetworkReply *, QString> m_streamReplies;
+};
