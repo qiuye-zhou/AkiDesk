@@ -19,7 +19,7 @@ static void copyResourceDir(const QString &resPrefix, const QString &destDir)
 {
     QDir dest(destDir);
     if (!dest.exists())
-        QDir().mkpath(dest);
+        QDir().mkpath(destDir);
 
     QDir resDir(resPrefix);
     const QFileInfoList entries = resDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
