@@ -43,41 +43,41 @@ set(PROJECT_SOURCES
     utils/PluginManager.h
     utils/PluginManager.cpp
 
-    ui/chatdialog.h
-    ui/chatdialog.cpp
-    ui/chatdialog.ui
+    ui/characterwindow/characterwindow.h
+    ui/characterwindow/characterwindow.cpp
+    ui/characterwindow/characterwindow.ui
 
-    ui/characterwindow.h
-    ui/characterwindow.cpp
-    ui/characterwindow.ui
+    ui/chatdialog/chatdialog.h
+    ui/chatdialog/chatdialog.cpp
+    ui/chatdialog/chatdialog.ui
 
-    ui/historypanel.h
-    ui/historypanel.cpp
-    ui/historypanel.ui
+    ui/chatdialog/historypanel.h
+    ui/chatdialog/historypanel.cpp
+    ui/chatdialog/historypanel.ui
 
-    ui/settingswindow.h
-    ui/settingswindow.cpp
-    ui/settingswindow.ui
+    ui/settingswindow/settingswindow.h
+    ui/settingswindow/settingswindow.cpp
+    ui/settingswindow/settingswindow.ui
 
-    ui/pages/page_llm.h
-    ui/pages/page_llm.cpp
-    ui/pages/page_llm.ui
+    ui/settingswindow/pages/page_llm.h
+    ui/settingswindow/pages/page_llm.cpp
+    ui/settingswindow/pages/page_llm.ui
 
-    ui/pages/page_character.h
-    ui/pages/page_character.cpp
-    ui/pages/page_character.ui
+    ui/settingswindow/pages/page_character.h
+    ui/settingswindow/pages/page_character.cpp
+    ui/settingswindow/pages/page_character.ui
 
-    ui/pages/page_vits.h
-    ui/pages/page_vits.cpp
-    ui/pages/page_vits.ui
+    ui/settingswindow/pages/page_vits.h
+    ui/settingswindow/pages/page_vits.cpp
+    ui/settingswindow/pages/page_vits.ui
 
-    ui/pages/page_plugin.h
-    ui/pages/page_plugin.cpp
-    ui/pages/page_plugin.ui
+    ui/settingswindow/pages/page_plugin.h
+    ui/settingswindow/pages/page_plugin.cpp
+    ui/settingswindow/pages/page_plugin.ui
 
-    ui/pages/page_about.h
-    ui/pages/page_about.cpp
-    ui/pages/page_about.ui
+    ui/settingswindow/pages/page_about.h
+    ui/settingswindow/pages/page_about.cpp
+    ui/settingswindow/pages/page_about.ui
 
     assets/resources.qrc
 )

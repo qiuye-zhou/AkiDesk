@@ -1,6 +1,6 @@
 #include "settingswindow.h"
-#include "chatdialog.h"
-#include "characterwindow.h"
+#include "ui/chatdialog/chatdialog.h"
+#include "ui/characterwindow/characterwindow.h"
 
 #include "pages/page_llm.h"
 #include "pages/page_character.h"

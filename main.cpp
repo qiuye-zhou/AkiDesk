@@ -1,6 +1,6 @@
-#include "ui/chatdialog.h"
-#include "ui/characterwindow.h"
-#include "ui/settingswindow.h"
+#include "ui/chatdialog/chatdialog.h"
+#include "ui/characterwindow/characterwindow.h"
+#include "ui/settingswindow/settingswindow.h"
 
 #include "config/AppPaths.h"
 #include "app_version.h"
