@@ -57,7 +57,7 @@ bool extractZip(const QString &zipPath, const QString &targetDir, QString *err)
 } // namespace
 
 PageCharacter::PageCharacter(QWidget *parent)
-    : QWidget(parent), ui(new Ui::PageCharacter), m_pluginManager(new PluginManager)
+    : QWidget(parent), ui(new Ui::PageCharacter), m_pluginManager(new PluginManager), m_loading(true)
 {
     ui->setupUi(this);
     m_pluginManager->reload();
@@ -81,8 +81,6 @@ PageCharacter::PageCharacter(QWidget *parent)
     connect(ui->btnImport, &QPushButton::clicked, this, &PageCharacter::onImportCharacter);
     connect(ui->btnDelete, &QPushButton::clicked, this, &PageCharacter::onDeleteCharacter);
     connect(ui->btnResetLoc, &QPushButton::clicked, this, [this]() { emit requestResetTachieLoc(); });
-
-    m_loading = true;
 }
 
 PageCharacter::~PageCharacter()

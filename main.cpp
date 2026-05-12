@@ -11,33 +11,40 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMenu>
+#include <QResource>
 #include <QStandardPaths>
 #include <QSystemTrayIcon>
 
-/* 递归复制 Qt 资源目录到本地文件系统（首次运行时部署默认配置） */
-static void copyResourceDir(const QString &resPrefix, const QString &destDir)
+/* 复制单个资源文件到目标位置 */
+static void copyResourceFile(const QString &resPath, const QString &destPath)
 {
-    QDir dest(destDir);
-    if (!dest.exists())
-        QDir().mkpath(destDir);
-
-    QDir resDir(resPrefix);
-    const QFileInfoList entries = resDir.entryInfoList(QDir::Files | QDir::Dirs | QDir::NoDotAndDotDot);
-    for (const QFileInfo &fi : entries)
+    if (!QFile::exists(destPath))
     {
-        if (fi.isDir())
-        {
-            /* 递归处理子目录 */
-            copyResourceDir(fi.filePath(), dest.filePath(fi.fileName()));
-        }
-        else
-        {
-            /* 复制单个文件（仅在目标不存在时） */
-            const QString destPath = dest.filePath(fi.fileName());
-            if (!QFile::exists(destPath))
-                QFile::copy(fi.filePath(), destPath);
-        }
+        QFile::copy(resPath, destPath);
     }
+}
+
+/* 部署默认配置文件 */
+static void deployDefaultConfig(const QString &projectDir)
+{
+    /* 确保目录存在 */
+    QDir().mkpath(QDir(projectDir).filePath("Character/demo/Tachie"));
+    QDir().mkpath(QDir(projectDir).filePath("Character/Config"));
+    QDir().mkpath(QDir(projectDir).filePath("Plugin/Anime"));
+
+    /* 复制角色配置文件 */
+    copyResourceFile(":/defaults/Character/demo/config.json",
+                     QDir(projectDir).filePath("Character/demo/config.json"));
+    copyResourceFile(":/defaults/Character/demo/context.json",
+                     QDir(projectDir).filePath("Character/demo/context.json"));
+    copyResourceFile(":/defaults/Character/demo/Tachie/default.png",
+                     QDir(projectDir).filePath("Character/demo/Tachie/default.png"));
+    copyResourceFile(":/defaults/Character/Config/config.json",
+                     QDir(projectDir).filePath("Character/Config/config.json"));
+
+    /* 复制动画插件 */
+    copyResourceFile(":/defaults/Plugin/Anime/Basic Animation Package.json",
+                     QDir(projectDir).filePath("Plugin/Anime/Basic Animation Package.json"));
 }
 
 int main(int argc, char *argv[])
@@ -58,9 +65,7 @@ int main(int argc, char *argv[])
     if (!QFile::exists(iniPath))
     {
         /* 部署默认角色资产和用户配置 */
-        copyResourceDir(":/defaults/Character", QDir(projectDir).filePath("Character"));
-        /* 部署默认动画插件 */
-        copyResourceDir(":/defaults/Plugin/Anime", QDir(projectDir).filePath("Plugin/Anime"));
+        deployDefaultConfig(projectDir);
         /* 部署默认本地配置 */
         QFile::copy(":/defaults/config.ini", iniPath);
     }

@@ -62,23 +62,36 @@ void JsonConfig::setValue(const QString &key, const QJsonValue &value)
     if (parts.isEmpty())
         return;
 
-    /* 逐层创建嵌套对象 */
-    QList<QJsonObject> stack;
-    stack.push_back(m_root);
-    for (int i = 0; i < parts.size() - 1; ++i)
+    /* 构建完整的嵌套结构 */
+    QJsonValue current = value;
+    for (int i = parts.size() - 1; i >= 0; --i)
     {
-        QJsonObject next = stack.last()[parts[i]].toObject();
-        stack.push_back(next);
+        QJsonObject obj;
+        obj[parts[i]] = current;
+        current = obj;
     }
 
-    /* 设置值 */
-    stack.last()[parts.last()] = value;
-
-    /* 逐层回写 */
-    for (int i = stack.size() - 2; i >= 0; --i)
-    {
-        stack[i][parts[i]] = stack[i + 1];
-    }
-    m_root = stack.first();
+    /* 合并到根对象 */
+    mergeObjects(m_root, current.toObject());
     save();
+}
+
+void JsonConfig::mergeObjects(QJsonObject &target, const QJsonObject &source)
+{
+    for (auto it = source.begin(); it != source.end(); ++it)
+    {
+        const QString &key = it.key();
+        const QJsonValue &srcValue = it.value();
+
+        if (srcValue.isObject() && target.contains(key) && target[key].isObject())
+        {
+            QJsonObject targetObj = target[key].toObject();
+            mergeObjects(targetObj, srcValue.toObject());
+            target[key] = targetObj;
+        }
+        else
+        {
+            target[key] = srcValue;
+        }
+    }
 }

@@ -428,6 +428,8 @@ void ChatDialog::reloadAiConfig()
     JsonConfig globalCfg(GlobalConfigPath);
     m_ai->setApiKey(globalCfg.value("llm/" + server + "/ApiKey").toString());
 
+    /* 先读取 VITS 启用状态再使用 */
+    m_vitsEnabled = charCfg.value("vitsEnable").toBool();
     if (m_vitsEnabled)
     {
         m_vits->setApiUrl(globalCfg.value("vits/ApiUrl").toString());

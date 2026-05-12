@@ -23,4 +23,5 @@ private:
     QJsonObject m_root;
 
     static QStringList splitKey(const QString &key);
+    static void mergeObjects(QJsonObject &target, const QJsonObject &source);
 };
