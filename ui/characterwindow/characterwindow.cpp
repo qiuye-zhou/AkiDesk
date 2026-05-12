@@ -31,6 +31,11 @@ CharacterWindow::CharacterWindow(QWidget *parent)
         ui->mainLayout->removeWidget(ui->labelTachie);
     ui->labelTachie->setParent(this);
 
+    /* 设置 label 为透明背景 */
+    ui->labelTachie->setAttribute(Qt::WA_TranslucentBackground);
+    ui->labelTachie->setStyleSheet("background: transparent;");
+    ui->labelTachie->setScaledContents(true);
+
     setAttribute(Qt::WA_TranslucentBackground);
     Qt::WindowFlags flags = Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint;
 #ifdef Q_OS_LINUX
@@ -90,6 +95,11 @@ void CharacterWindow::applyInputShapeFromImage()
     region.translate(m_scaledTopLeft);
     applyInputShape(region);
 }
+
+void CharacterWindow::applyInputShapeFullWindow()
+{
+    applyInputShape(QRegion(QRect(0, 0, width(), height())));
+}
 #endif
 
 /* 根据名称加载立绘图片并显示 */
@@ -114,10 +124,16 @@ void CharacterWindow::setTachieImage(const QString &name)
     for (const QString &c : candidates)
     {
         const QString fp = dir.filePath(c);
-        if (QFileInfo::exists(fp) && loaded.load(fp))
+        if (QFileInfo::exists(fp))
         {
-            ok = true;
-            break;
+            /* 使用 QImage 加载以确保正确处理 alpha 通道 */
+            QImage img(fp);
+            if (!img.isNull())
+            {
+                loaded = QPixmap::fromImage(img);
+                ok = true;
+                break;
+            }
         }
     }
     /* 大小写不敏感兜底 */
@@ -127,8 +143,10 @@ void CharacterWindow::setTachieImage(const QString &name)
         {
             if (QFileInfo(f).completeBaseName().compare(normalizedName, Qt::CaseInsensitive) != 0)
                 continue;
-            if (loaded.load(dir.filePath(f)))
+            QImage img(dir.filePath(f));
+            if (!img.isNull())
             {
+                loaded = QPixmap::fromImage(img);
                 ok = true;
                 break;
             }
@@ -173,10 +191,8 @@ void CharacterWindow::setTachieSize(int sizePercent)
 #ifdef Q_OS_LINUX
     applyInputShapeFromImage();
 #else
-    /* Windows: 使用图片 alpha 通道作为点击穿透区域 */
-    QRegion region(QBitmap::fromImage(m_scaledImage.createAlphaMask()));
-    region.translate(m_scaledTopLeft);
-    ui->labelTachie->setMask(region);
+    /* Windows 下不裁剪窗口形状，避免半透明边缘被硬裁切后出现"略微缩小/边缘异常" */
+    clearMask();
 #endif
 }
 
@@ -186,9 +202,41 @@ void CharacterWindow::contextMenuEvent(QContextMenuEvent *)
     emit requestToggleChat();
 }
 
-/* 鼠标穿透：将未命中图片的点击传递到底层窗口 */
-void CharacterWindow::mousePressEvent(QMouseEvent *event) { event->ignore(); }
-void CharacterWindow::mouseReleaseEvent(QMouseEvent *event) { event->ignore(); }
+/* 鼠标穿透：检查点击位置的 alpha 值，透明区域忽略点击 */
+void CharacterWindow::mousePressEvent(QMouseEvent *event)
+{
+    const QPoint pos = event->pos();
+    const QPoint imgPos = pos - m_scaledTopLeft;
+    const QRect imageBounds(QPoint(0, 0), m_scaledImage.size());
+    if (m_scaledImage.isNull() || !imageBounds.contains(imgPos))
+    {
+        event->ignore();
+        return;
+    }
+
+    const int alpha = m_scaledImage.pixelColor(imgPos).alpha();
+    if (alpha < 10)
+    {
+        event->ignore();
+        return;
+    }
+
+#ifdef Q_OS_LINUX
+    //拖动时扩大输入区域，避免鼠标离开形状区域后丢失拖拽。
+    applyInputShapeFullWindow();
+#endif
+
+    QWidget::mousePressEvent(event);
+}
+
+void CharacterWindow::mouseReleaseEvent(QMouseEvent *event)
+{
+    QWidget::mouseReleaseEvent(event);
+
+#ifdef Q_OS_LINUX
+    applyInputShapeFromImage();
+#endif
+}
 
 /* 从 ini 恢复立绘窗口位置 */
 void CharacterWindow::restorePosition()

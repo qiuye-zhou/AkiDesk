@@ -47,5 +47,6 @@ private:
 #ifdef Q_OS_LINUX
     void applyInputShape(const QRegion &region);
     void applyInputShapeFromImage();
+    void applyInputShapeFullWindow();
 #endif
 };
