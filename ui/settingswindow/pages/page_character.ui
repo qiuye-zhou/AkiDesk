@@ -6,14 +6,28 @@
    <rect><x>0</x><y>0</y><width>550</width><height>500</height></rect>
   </property>
   <layout class="QVBoxLayout" name="mainLayout">
+   <property name="spacing"><number>10</number></property>
 
    <item>
     <widget class="QGroupBox" name="grpChar">
      <property name="title"><string>角色管理</string></property>
      <layout class="QHBoxLayout" name="h1">
-      <item><widget class="QComboBox" name="comboChar"><property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property></widget></item>
-      <item><widget class="QPushButton" name="btnImport"><property name="text"><string>导入</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnDelete"><property name="text"><string>删除</string></property></widget></item>
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QComboBox" name="comboChar">
+        <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnImport">
+        <property name="text"><string>导入</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnDelete">
+        <property name="text"><string>删除</string></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -22,7 +36,13 @@
     <widget class="QGroupBox" name="grpPrompt">
      <property name="title"><string>角色设定 Prompt</string></property>
      <layout class="QVBoxLayout" name="v1">
-      <item><widget class="QPlainTextEdit" name="editPrompt"><property name="placeholderText"><string>输入角色设定...</string></property></widget></item>
+      <property name="spacing"><number>8</number></property>
+      <item>
+       <widget class="QPlainTextEdit" name="editPrompt">
+        <property name="placeholderText"><string>输入角色设定...</string></property>
+        <property name="minimumSize"><size><width>0</width><height>80</height></size></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -31,9 +51,30 @@
     <widget class="QGroupBox" name="grpDisplay">
      <property name="title"><string>显示设置</string></property>
      <layout class="QHBoxLayout" name="h2">
-      <item><widget class="QLabel" name="lblSize"><property name="text"><string>立绘大小(%)</string></property></widget></item>
-      <item><widget class="QSpinBox" name="spinTachieSize"><property name="minimum"><number>10</number></property><property name="maximum"><number>500</number></property><property name="value"><number>100</number></property></widget></item>
-      <item><widget class="QPushButton" name="btnResetLoc"><property name="text"><string>重置位置</string></property></widget></item>
+      <property name="spacing"><number>12</number></property>
+      <item>
+       <widget class="QLabel" name="lblSize">
+        <property name="text"><string>立绘大小(%)</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QSpinBox" name="spinTachieSize">
+        <property name="minimum"><number>10</number></property>
+        <property name="maximum"><number>500</number></property>
+        <property name="value"><number>100</number></property>
+        <property name="suffix"><string> %</string></property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="hSpacer2">
+        <property name="orientation"><enum>Qt::Horizontal</enum></property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnResetLoc">
+        <property name="text"><string>重置位置</string></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -42,12 +83,39 @@
     <widget class="QGroupBox" name="grpModel">
      <property name="title"><string>运行配置</string></property>
      <layout class="QGridLayout" name="g1">
-      <item row="0" column="0"><widget class="QLabel" name="lblServer"><property name="text"><string>对话服务商</string></property></widget></item>
-      <item row="0" column="1"><widget class="QComboBox" name="comboServer"><item><property name="text"><string>DeepSeek</string></property></item><item><property name="text"><string>OpenAI</string></property></item></widget></item>
-      <item row="1" column="0"><widget class="QLabel" name="lblModel"><property name="text"><string>对话模型</string></property></widget></item>
-      <item row="1" column="1"><widget class="QComboBox" name="comboModel"><property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property></widget></item>
-      <item row="2" column="0"><widget class="QCheckBox" name="checkVits"><property name="text"><string>启用语音合成</string></property></widget></item>
-      <item row="2" column="1"><widget class="QComboBox" name="comboVitsModel"><property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property></widget></item>
+      <property name="horizontalSpacing"><number>12</number></property>
+      <property name="verticalSpacing"><number>10</number></property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="lblServer">
+        <property name="text"><string>对话服务商</string></property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="comboServer">
+        <item><property name="text"><string>DeepSeek</string></property></item>
+        <item><property name="text"><string>OpenAI</string></property></item>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lblModel">
+        <property name="text"><string>对话模型</string></property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="comboModel">
+        <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QCheckBox" name="checkVits">
+        <property name="text"><string>启用语音合成</string></property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QComboBox" name="comboVitsModel">
+        <property name="sizePolicy"><sizepolicy hsizetype="Expanding" vsizetype="Fixed"/></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -56,7 +124,10 @@
     <widget class="QGroupBox" name="grpBindings">
      <property name="title"><string>立绘动画绑定</string></property>
      <layout class="QVBoxLayout" name="v2">
-      <item><widget class="QListWidget" name="listBindings"/></item>
+      <property name="spacing"><number>8</number></property>
+      <item>
+       <widget class="QListWidget" name="listBindings"/>
+      </item>
      </layout>
     </widget>
    </item>

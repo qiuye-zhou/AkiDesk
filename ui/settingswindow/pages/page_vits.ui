@@ -6,28 +6,49 @@
    <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing"><number>10</number></property>
 
    <item>
     <widget class="QGroupBox" name="grpApi">
      <property name="title"><string>vits-simple-api 地址</string></property>
      <layout class="QHBoxLayout" name="h1">
-      <item><widget class="QLineEdit" name="editApiUrl"><property name="placeholderText"><string>http://127.0.0.1:23456</string></property></widget></item>
-      <item><widget class="QPushButton" name="btnFetchSpeakers"><property name="text"><string>获取模型列表</string></property></widget></item>
+      <property name="spacing"><number>10</number></property>
+      <item>
+       <widget class="QLineEdit" name="editApiUrl">
+        <property name="placeholderText"><string>http://127.0.0.1:23456</string></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="btnFetchSpeakers">
+        <property name="text"><string>获取模型列表</string></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
 
    <item>
-    <widget class="QCheckBox" name="checkSentenceSplit">
-     <property name="text"><string>按句切分语音（边生成边朗读）</string></property>
+    <widget class="QGroupBox" name="grpOptions">
+     <property name="title"><string>语音选项</string></property>
+     <layout class="QVBoxLayout" name="v1">
+      <property name="spacing"><number>8</number></property>
+      <item>
+       <widget class="QCheckBox" name="checkSentenceSplit">
+        <property name="text"><string>按句切分语音（边生成边朗读）</string></property>
+       </widget>
+      </item>
+     </layout>
     </widget>
    </item>
 
    <item>
     <widget class="QGroupBox" name="grpSpeakers">
      <property name="title"><string>可用模型和说话人</string></property>
-     <layout class="QVBoxLayout" name="v1">
-      <item><widget class="QListView" name="listSpeakers"/></item>
+     <layout class="QVBoxLayout" name="v2">
+      <property name="spacing"><number>8</number></property>
+      <item>
+       <widget class="QListView" name="listSpeakers"/>
+      </item>
      </layout>
     </widget>
    </item>

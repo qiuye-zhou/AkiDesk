@@ -6,32 +6,63 @@
    <rect><x>0</x><y>0</y><width>400</width><height>300</height></rect>
   </property>
   <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing"><number>6</number></property>
+
+   <item>
+    <spacer name="vSpacerTop">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>0</width><height>40</height></size></property>
+    </spacer>
+   </item>
+
    <item>
     <widget class="QLabel" name="labelTitle">
      <property name="text"><string>AkiDesk</string></property>
      <property name="alignment"><set>Qt::AlignCenter</set></property>
-     <property name="font"><font><pointsize>20</pointsize><weight>75</weight><bold>true</bold></font></property>
+     <property name="font"><font><pointsize>26</pointsize><weight>75</weight><bold>true</bold></font></property>
+     <property name="styleSheet"><string>color: #1C1C1E; letter-spacing: 1px;</string></property>
     </widget>
    </item>
+
    <item>
     <widget class="QLabel" name="labelSubtitle">
      <property name="text"><string>Galgame 风格 AI 桌宠</string></property>
      <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="styleSheet"><string>color: #8E8E93; font-size: 14px; margin-top: 4px;</string></property>
     </widget>
    </item>
+
+   <item>
+    <spacer name="vSpacerMid">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>0</width><height>20</height></size></property>
+    </spacer>
+   </item>
+
    <item>
     <widget class="QLabel" name="labelVersion">
      <property name="text"><string>版本：1.0.0</string></property>
      <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="styleSheet"><string>color: #8E8E93; font-size: 12px;</string></property>
     </widget>
    </item>
+
    <item>
     <widget class="QLabel" name="labelGithub">
-     <property name="text"><string>&lt;a href=&quot;https://github.com/qiuye-zhou/AkiDesk&quot;&gt;GitHub 仓库&lt;/a&gt;</string></property>
+     <property name="text"><string>&lt;a href=&quot;https://github.com/qiuye-zhou/AkiDesk&quot; style=&quot;color: #007AFF; text-decoration: none;&quot;&gt;GitHub 仓库&lt;/a&gt;</string></property>
      <property name="alignment"><set>Qt::AlignCenter</set></property>
      <property name="openExternalLinks"><bool>true</bool></property>
+     <property name="styleSheet"><string>font-size: 13px;</string></property>
     </widget>
    </item>
+
+   <item>
+    <spacer name="vSpacerBottom">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>0</width><height>40</height></size></property>
+    </spacer>
+   </item>
+
   </layout>
  </widget>
  <resources/>
