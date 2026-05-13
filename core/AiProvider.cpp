@@ -13,23 +13,6 @@ AiProvider::AiProvider(QObject *parent)
 {
 }
 
-void AiProvider::setServiceType(ServiceType type)
-{
-    m_serviceType = type;
-    /* 重置默认 URL */
-    switch (type)
-    {
-    case OpenAI:
-        m_apiUrl = "https://api.openai.com";
-        break;
-    case DeepSeek:
-        m_apiUrl = "https://api.deepseek.com/v1";
-        break;
-    case Custom:
-        break;
-    }
-}
-
 void AiProvider::setApiKey(const QString &apiKey) { m_apiKey = apiKey; }
 void AiProvider::setApiUrl(const QString &url) { m_apiUrl = url; }
 void AiProvider::setModel(const QString &model) { m_model = model; }

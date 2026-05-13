@@ -15,12 +15,6 @@ class AiProvider : public QObject
     Q_OBJECT
 
 public:
-    enum ServiceType {
-        OpenAI,
-        DeepSeek,
-        Custom
-    };
-
     struct ModelInfo {
         QString id;
         QString created;
@@ -29,7 +23,6 @@ public:
 
     explicit AiProvider(QObject *parent = nullptr);
 
-    void setServiceType(ServiceType type);
     void setApiKey(const QString &apiKey);
     void setApiUrl(const QString &url);
     void setModel(const QString &model);
@@ -37,7 +30,7 @@ public:
     void setSystemPrompt(const QString &prompt);
 
     QString currentModel() const { return m_model; }
-    ServiceType currentServiceType() const { return m_serviceType; }
+    QString currentApiUrl() const { return m_apiUrl; }
 
     /* 拉取可用模型列表 */
     void fetchModels();
@@ -68,7 +61,6 @@ private:
     QString m_model;
     bool m_streamEnabled = true;
     QString m_systemPrompt;
-    ServiceType m_serviceType = DeepSeek;
 
     /* 每个流式请求维护独立的缓冲区 */
     QHash<QNetworkReply *, QByteArray> m_streamBuffers;

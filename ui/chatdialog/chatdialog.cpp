@@ -6,6 +6,7 @@
 #include "config/JsonConfig.h"
 #include "core/AiProvider.h"
 #include "core/VitsEngine.h"
+#include "ui/settingswindow/pages/page_llm.h"
 #include "utils/DragHelper.h"
 #include "utils/ScrollHelper.h"
 
@@ -418,15 +419,16 @@ void ChatDialog::reloadAiConfig()
 {
     JsonConfig charCfg(CurrentCharacterUserConfig());
     QString server = charCfg.value("serverSelect").toString();
-    if (server == "OpenAI")
-        m_ai->setServiceType(AiProvider::OpenAI);
-    else
-        m_ai->setServiceType(AiProvider::DeepSeek);
+    QString baseUrl, apiKey;
+    if (PageLLM::findProvider(server, baseUrl, apiKey))
+    {
+        m_ai->setApiUrl(baseUrl);
+        m_ai->setApiKey(apiKey);
+    }
 
     m_ai->setModel(charCfg.value("modelSelect").toString());
 
     JsonConfig globalCfg(GlobalConfigPath);
-    m_ai->setApiKey(globalCfg.value("llm/" + server + "/ApiKey").toString());
 
     /* 先读取 VITS 启用状态再使用 */
     m_vitsEnabled = charCfg.value("vitsEnable").toBool();

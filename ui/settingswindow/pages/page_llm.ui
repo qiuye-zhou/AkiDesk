@@ -3,68 +3,124 @@
  <class>PageLLM</class>
  <widget class="QWidget" name="PageLLM">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
+   <rect><x>0</x><y>0</y><width>600</width><height>420</height></rect>
   </property>
-  <layout class="QVBoxLayout" name="verticalLayout">
+  <layout class="QHBoxLayout" name="mainLayout">
    <property name="spacing"><number>10</number></property>
 
+   <!-- 左侧：服务商列表 -->
    <item>
-    <widget class="QGroupBox" name="grpServer">
-     <property name="title"><string>服务商选择</string></property>
-     <layout class="QHBoxLayout" name="hLayout1">
-      <property name="spacing"><number>12</number></property>
-      <item>
-       <widget class="QComboBox" name="comboServer">
-        <item><property name="text"><string>DeepSeek</string></property></item>
-        <item><property name="text"><string>OpenAI</string></property></item>
-        <item><property name="text"><string>Custom</string></property></item>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="labelStatus">
-        <property name="text"><string>未配置</string></property>
-        <property name="styleSheet"><string>color: #8E8E93; font-size: 12px;</string></property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="hSpacer1">
-        <property name="orientation"><enum>Qt::Horizontal</enum></property>
-       </spacer>
-      </item>
-     </layout>
-    </widget>
+    <layout class="QVBoxLayout" name="leftLayout">
+     <property name="spacing"><number>8</number></property>
+     <item>
+      <widget class="QLabel" name="lblProviderList">
+       <property name="text"><string>服务商列表</string></property>
+       <property name="styleSheet"><string>font-weight: bold; font-size: 13px;</string></property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QListWidget" name="listProviders">
+       <property name="maximumSize"><size><width>180</width><height>16777215</height></size></property>
+       <property name="minimumSize"><size><width>140</width><height>0</height></size></property>
+      </widget>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="btnLayout">
+       <property name="spacing"><number>6</number></property>
+       <item>
+        <widget class="QPushButton" name="btnAddProvider">
+         <property name="text"><string>添加</string></property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnRemoveProvider">
+         <property name="text"><string>删除</string></property>
+        </widget>
+       </item>
+      </layout>
+     </item>
+    </layout>
    </item>
 
+   <!-- 右侧：服务商详情 -->
    <item>
-    <widget class="QGroupBox" name="grpApiKey">
-     <property name="title"><string>API Key</string></property>
-     <layout class="QHBoxLayout" name="hLayout2">
-      <property name="spacing"><number>10</number></property>
-      <item>
-       <widget class="QLineEdit" name="editApiKey">
-        <property name="echoMode"><enum>QLineEdit::Password</enum></property>
-        <property name="placeholderText"><string>输入你的 API Key</string></property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="btnFetchModels">
-        <property name="text"><string>获取模型列表</string></property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </item>
+    <layout class="QVBoxLayout" name="rightLayout">
+     <property name="spacing"><number>10</number></property>
 
-   <item>
-    <widget class="QGroupBox" name="grpModels">
-     <property name="title"><string>可用模型列表</string></property>
-     <layout class="QVBoxLayout" name="vLayoutModels">
-      <property name="spacing"><number>8</number></property>
-      <item>
-       <widget class="QListView" name="listModels"/>
-      </item>
-     </layout>
-    </widget>
+     <item>
+      <widget class="QGroupBox" name="grpDetail">
+       <property name="title"><string>服务商配置</string></property>
+       <layout class="QGridLayout" name="detailGrid">
+        <property name="horizontalSpacing"><number>12</number></property>
+        <property name="verticalSpacing"><number>10</number></property>
+
+        <item row="0" column="0">
+         <widget class="QLabel" name="lblName">
+          <property name="text"><string>名称</string></property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="editProviderName">
+          <property name="placeholderText"><string>例如：DeepSeek、OpenAI、自定义</string></property>
+         </widget>
+        </item>
+
+        <item row="1" column="0">
+         <widget class="QLabel" name="lblBaseUrl">
+          <property name="text"><string>请求地址</string></property>
+         </widget>
+        </item>
+        <item row="1" column="1">
+         <widget class="QLineEdit" name="editBaseUrl">
+          <property name="placeholderText"><string>例如：https://api.deepseek.com/v1</string></property>
+         </widget>
+        </item>
+
+        <item row="2" column="0">
+         <widget class="QLabel" name="lblApiKey">
+          <property name="text"><string>API Key</string></property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <layout class="QHBoxLayout" name="apiKeyLayout">
+          <property name="spacing"><number>8</number></property>
+          <item>
+           <widget class="QLineEdit" name="editApiKey">
+            <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+            <property name="placeholderText"><string>输入 API Key</string></property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnFetchModels">
+            <property name="text"><string>获取模型列表</string></property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+
+        <item row="3" column="0" colspan="2">
+         <widget class="QLabel" name="labelStatus">
+          <property name="text"><string>请选择或添加一个服务商</string></property>
+          <property name="styleSheet"><string>color: #8E8E93; font-size: 12px;</string></property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </item>
+
+     <item>
+      <widget class="QGroupBox" name="grpModels">
+       <property name="title"><string>可用模型列表</string></property>
+       <layout class="QVBoxLayout" name="vLayoutModels">
+        <property name="spacing"><number>8</number></property>
+        <item>
+         <widget class="QListView" name="listModels"/>
+        </item>
+       </layout>
+      </widget>
+     </item>
+
+    </layout>
    </item>
 
   </layout>

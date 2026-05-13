@@ -575,6 +575,10 @@ void SettingsWindow::setupUi()
     /* VITS 页面信号 */
     connect(pageVits, &PageVits::vitsModelListRefreshed, pageChar,
             &PageCharacter::refreshVitsModelList);
+
+    /* LLM 页面信号：服务商列表变更时通知角色页面刷新 */
+    connect(pageLLM, &PageLLM::modelListRefreshed, pageChar,
+            &PageCharacter::refreshServerList);
 }
 
 void SettingsWindow::closeEvent(QCloseEvent *event)

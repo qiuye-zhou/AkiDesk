@@ -37,6 +37,7 @@ private slots:
 private:
     void loadCurrentConfig();
     void refreshCharList();
+    void refreshServerList();
     void refreshModelList();
     void refreshTachieBindings();
 

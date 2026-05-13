@@ -113,6 +113,7 @@ void PageCharacter::loadCurrentConfig()
     /* 用户运行配置 */
     JsonConfig charCfg(CurrentCharacterUserConfig());
     ui->spinTachieSize->setValue(charCfg.value("tachieSize", "100").toString().toInt());
+    refreshServerList();
     ui->comboServer->setCurrentText(charCfg.value("serverSelect", "DeepSeek").toString());
     refreshModelList();
     ui->comboModel->setCurrentText(charCfg.value("modelSelect").toString());
@@ -127,6 +128,24 @@ void PageCharacter::loadCurrentConfig()
 
     refreshTachieBindings();
     m_loading = true;
+}
+
+/* 刷新服务商下拉列表 */
+void PageCharacter::refreshServerList()
+{
+    JsonConfig cfg(GlobalConfigPath);
+    QJsonArray providers = cfg.value("llm/providers").toArray();
+    QStringList names;
+    for (const QJsonValue &v : providers)
+        names << v.toObject()["name"].toString();
+
+    QString current = ui->comboServer->currentText();
+    ui->comboServer->clear();
+    ui->comboServer->addItems(names);
+
+    /* 尝试恢复之前的选择 */
+    if (!current.isEmpty() && names.contains(current))
+        ui->comboServer->setCurrentText(current);
 }
 
 /* 刷新角色下拉列表 */
@@ -144,10 +163,19 @@ void PageCharacter::refreshModelList()
 {
     QString server = ui->comboServer->currentText();
     JsonConfig cfg(GlobalConfigPath);
-    QJsonArray arr = cfg.value("llm/" + server + "/ModelList").toArray();
+    QJsonArray providers = cfg.value("llm/providers").toArray();
     QStringList list;
-    for (const QJsonValue &v : arr)
-        list << v.toString();
+    for (const QJsonValue &v : providers)
+    {
+        QJsonObject prov = v.toObject();
+        if (prov["name"].toString() == server)
+        {
+            QJsonArray arr = prov["modelList"].toArray();
+            for (const QJsonValue &mv : arr)
+                list << mv.toString();
+            break;
+        }
+    }
     ui->comboModel->clear();
     ui->comboModel->addItems(list);
 }
