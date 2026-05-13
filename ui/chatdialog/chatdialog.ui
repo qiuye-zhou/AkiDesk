@@ -207,18 +207,22 @@ QScrollBar::groove:vertical {
     background-color: transparent;
     border: none;
     border-radius: 5px;
+    font-size: 16px;
+    color: #555555;
 }
 
 QPushButton:hover {
-    border: 2px solid #CCCCCC;
+    background-color: rgba(0, 0, 0, 0.08);
+    border: none;
 }
 
 QPushButton:pressed {
-    border: 2px solid #AAAAAA;
+    background-color: rgba(0, 0, 0, 0.15);
+    border: none;
 }</string>
      </property>
      <property name="text">
-      <string notr="true"/>
+      <string notr="true">⏱</string>
      </property>
     </widget>
    </item>
