@@ -61,6 +61,7 @@ void HistoryPanel::addItem(int index, const QString &role, const QString &text)
 
     auto *lblText = new QLabel(text, itemWidget);
     lblText->setWordWrap(true);
+    lblText->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
     lblText->setStyleSheet("font-size:12px; color:#1C1C1E;");
 
     auto *btnJump = new QPushButton(itemWidget);

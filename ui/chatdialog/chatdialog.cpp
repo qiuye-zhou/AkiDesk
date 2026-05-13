@@ -162,8 +162,16 @@ void ChatDialog::initWindow()
     ui->scrollBar->hide();
     new ScrollHelper(ui->textEdit, ui->scrollBar, 5, this);
     new DragHelper(this);
-    ui->textEdit->installEventFilter(this);
-    ui->textEdit->viewport()->installEventFilter(this);
+
+    /* 同步 scrollBar 与 textEdit 的滚动 */
+    connect(ui->scrollBar, &QScrollBar::valueChanged,
+            ui->textEdit->verticalScrollBar(), &QScrollBar::setValue);
+    connect(ui->textEdit->verticalScrollBar(), &QScrollBar::rangeChanged,
+            this, [this](int min, int max) {
+        ui->scrollBar->setRange(min, max);
+        ui->scrollBar->setPageStep(ui->textEdit->verticalScrollBar()->pageStep());
+        ui->scrollBar->setVisible(max > min);
+    });
 }
 
 /* 从本地文件加载对话上下文历史 */
@@ -352,6 +360,7 @@ void ChatDialog::on_btnHistory_clicked()
             m_historyPanel->addItem(i, "记录", line);
     }
 
+    m_historyPanel->resize(width(), m_historyPanel->height());
     m_historyPanel->move(x(), y() - m_historyPanel->height());
 
     if (!m_historyVisible)
@@ -443,16 +452,6 @@ void ChatDialog::reloadAiConfig()
     loadContext();
 }
 
-/* 滚轮上滑打开历史面板，下滑关闭 */
-void ChatDialog::wheelEvent(QWheelEvent *event)
-{
-    if (event->angleDelta().y() > 0 && !m_historyVisible)
-        ui->btnHistory->click();
-    else if (event->angleDelta().y() < 0 && m_historyVisible)
-        ui->btnHistory->click();
-    QWidget::wheelEvent(event);
-}
-
 /* 对话框移动时，历史面板跟随移动 */
 void ChatDialog::moveEvent(QMoveEvent *event)
 {
@@ -463,22 +462,6 @@ void ChatDialog::moveEvent(QMoveEvent *event)
     }
     m_lastPos = event->pos();
     QWidget::moveEvent(event);
-}
-
-/* 拦截文本编辑框的滚轮事件，转为历史面板控制 */
-bool ChatDialog::eventFilter(QObject *watched, QEvent *event)
-{
-    if ((watched == ui->textEdit || watched == ui->textEdit->viewport()) &&
-        event->type() == QEvent::Wheel)
-    {
-        auto *we = static_cast<QWheelEvent *>(event);
-        if (we->angleDelta().y() > 0 && !m_historyVisible)
-            ui->btnHistory->click();
-        else if (we->angleDelta().y() < 0 && m_historyVisible)
-            ui->btnHistory->click();
-        return true;
-    }
-    return QWidget::eventFilter(watched, event);
 }
 
 int ChatDialog::findSentenceEnd(const QString &text, int from)

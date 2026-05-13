@@ -29,9 +29,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
-    void wheelEvent(QWheelEvent *event) override;
     void moveEvent(QMoveEvent *event) override;
-    bool eventFilter(QObject *watched, QEvent *event) override;
 
 private slots:
     void on_btnNext_clicked();
