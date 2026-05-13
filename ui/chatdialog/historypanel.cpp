@@ -49,24 +49,27 @@ void HistoryPanel::addItem(int index, const QString &role, const QString &text)
         return;
 
     auto *itemWidget = new QWidget(this);
+    itemWidget->setStyleSheet(
+        "QWidget { background:transparent; border-radius:6px; }"
+        "QWidget:hover { background:#F2F2F7; }");
     auto *itemLayout = new QHBoxLayout(itemWidget);
-    itemLayout->setContentsMargins(4, 4, 4, 4);
+    itemLayout->setContentsMargins(6, 6, 6, 6);
 
     auto *lblRole = new QLabel(role, itemWidget);
     lblRole->setFixedWidth(30);
-    lblRole->setStyleSheet("font-weight:bold; font-size:12px;");
+    lblRole->setStyleSheet("font-weight:bold; font-size:12px; color:#8E8E93;");
 
     auto *lblText = new QLabel(text, itemWidget);
     lblText->setWordWrap(true);
-    lblText->setStyleSheet("font-size:12px;");
+    lblText->setStyleSheet("font-size:12px; color:#1C1C1E;");
 
     auto *btnJump = new QPushButton(itemWidget);
     btnJump->setToolTip("回溯到这条记录");
     btnJump->setFixedSize(24, 24);
     btnJump->setStyleSheet(
         "QPushButton { background:transparent; border:none; border-radius:5px; }"
-        "QPushButton:hover { border:2px solid #CCCCCC; }"
-        "QPushButton:pressed { border:2px solid #AAAAAA; }");
+        "QPushButton:hover { border:2px solid #C7C7CC; }"
+        "QPushButton:pressed { border:2px solid #AEAEB2; }");
     btnJump->setText(QString::fromUtf8("\xe2\x86\xa9"));
     connect(btnJump, &QPushButton::clicked, this, [this, index]() {
         emit jumpToIndex(index);
