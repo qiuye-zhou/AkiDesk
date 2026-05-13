@@ -75,11 +75,11 @@ void VitsEngine::startNextSynthesis()
     m_synthesizing = true;
     const QString text = m_pendingTexts.takeFirst();
 
-    /* 构建请求 URL：/voice/{text}?id={speaker}&model={model} */
-    QString url = QString("%1/voice/%2?model=%3&id=%4")
-                      .arg(m_apiUrl)
+    /* 构建请求 URL：/voice/vits?text={text}&id={speaker} */
+    QString base = m_apiUrl.endsWith('/') ? m_apiUrl.chopped(1) : m_apiUrl;
+    QString url = QString("%1/voice/vits?text=%2&id=%3")
+                      .arg(base)
                       .arg(QString(QUrl::toPercentEncoding(text)))
-                      .arg(QString(QUrl::toPercentEncoding(m_model)))
                       .arg(QString(QUrl::toPercentEncoding(m_speaker)));
 
     QNetworkReply *reply = m_network->get(QNetworkRequest(QUrl(url)));

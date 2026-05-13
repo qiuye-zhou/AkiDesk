@@ -447,7 +447,7 @@ void ChatDialog::reloadAiConfig()
         m_vits->setApiUrl(globalCfg.value("vits/ApiUrl").toString());
         QString mas = charCfg.value("vitsMasSelect").toString();
         m_vits->setModel(mas.section(" - ", 0, 0).trimmed());
-        m_vits->setSpeaker(mas.section(" - ", 2, 2).trimmed());
+        m_vits->setSpeaker(mas.section(" - ", 1, 1).trimmed());
     }
 
     loadContext();
