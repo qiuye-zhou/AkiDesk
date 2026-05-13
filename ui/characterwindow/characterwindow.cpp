@@ -33,7 +33,6 @@ CharacterWindow::CharacterWindow(QWidget *parent)
 
     /* 设置 label 为透明背景 */
     ui->labelTachie->setAttribute(Qt::WA_TranslucentBackground);
-    ui->labelTachie->setStyleSheet("background: transparent;");
     ui->labelTachie->setScaledContents(true);
 
     setAttribute(Qt::WA_TranslucentBackground);

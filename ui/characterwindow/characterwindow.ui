@@ -8,6 +8,12 @@
   <layout class="QVBoxLayout" name="mainLayout">
    <item>
     <widget class="QLabel" name="labelTachie">
+     <property name="styleSheet">
+      <string notr="true">background: transparent; border: none; padding: 0; margin: 0;</string>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::NoFrame</enum>
+     </property>
      <property name="alignment">
       <set>Qt::AlignCenter</set>
      </property>

@@ -25,6 +25,7 @@
   <property name="styleSheet">
    <string notr="true">* {
     background: transparent;
+    border: none;
 }</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
