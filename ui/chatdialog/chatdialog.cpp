@@ -241,7 +241,8 @@ void ChatDialog::keyPressEvent(QKeyEvent *event)
 void ChatDialog::keyReleaseEvent(QKeyEvent *event)
 {
     m_pressedKeys.removeAll(event->key());
-    if (event->key() == Qt::Key_Return && !m_pressedKeys.contains(Qt::Key_Shift))
+    if (event->key() == Qt::Key_Return && !m_pressedKeys.contains(Qt::Key_Shift)
+        && ui->textEdit->isEnabled())
     {
         /* 获取用户输入 */
         QTextCursor cursor = ui->textEdit->textCursor();
