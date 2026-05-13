@@ -544,7 +544,7 @@ void SettingsWindow::setupUi()
     auto *pageAbout = new PageAbout(this);
 
     /* 确保页面在滚动区域内正确展开 */
-    for (auto *page : {static_cast<QWidget *>(pageLLM), pageChar, pageVits, pagePlugin, pageAbout})
+    for (QWidget *page : {static_cast<QWidget *>(pageLLM), static_cast<QWidget *>(pageChar), static_cast<QWidget *>(pageVits), static_cast<QWidget *>(pagePlugin), static_cast<QWidget *>(pageAbout)})
         page->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 
     m_stack->addWidget(makeScrollable(pageLLM));

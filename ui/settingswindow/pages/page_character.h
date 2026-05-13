@@ -16,6 +16,7 @@ public:
     ~PageCharacter();
 
     void refreshVitsModelList();
+    void refreshServerList();
 
 signals:
     void requestReloadCharSelect(const QString &name);
@@ -37,7 +38,6 @@ private slots:
 private:
     void loadCurrentConfig();
     void refreshCharList();
-    void refreshServerList();
     void refreshModelList();
     void refreshTachieBindings();
 
