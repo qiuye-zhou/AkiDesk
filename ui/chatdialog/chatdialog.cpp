@@ -26,6 +26,7 @@
 #include <QPropertyAnimation>
 #include <QSettings>
 #include <QTextCursor>
+#include <QTimer>
 
 ChatDialog::ChatDialog(QWidget *parent)
     : QWidget(parent), ui(new Ui::ChatDialog)
@@ -128,12 +129,19 @@ ChatDialog::ChatDialog(QWidget *parent)
         m_vitsCursor = 0;
     });
 
-    /* 语音识别完成：填入输入框并自动发送 */
+    /* 语音识别完成：先在输入框显示识别结果，短暂停留后自动发送 */
     connect(m_stt, &SpeechRecognizer::recognized, this, [this](const QString &text) {
         ui->btnVoice->setEnabled(true);
         QString trimmed = text.trimmed();
         if (!trimmed.isEmpty())
-            sendMessage(trimmed);
+        {
+            ui->textEdit->setText(trimmed);
+            QTimer::singleShot(800, this, [this, trimmed]() {
+                if (!ui->textEdit->isEnabled())
+                    return;
+                sendMessage(trimmed);
+            });
+        }
     });
 
     /* 语音识别错误 */
