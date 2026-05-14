@@ -293,7 +293,8 @@ void ChatDialog::sendMessage(const QString &text)
     if (text.isEmpty())
         return;
 
-    ui->labelName->setText("她");
+    const QString charName = CurrentCharacterName();
+    ui->labelName->setText(charName.isEmpty() ? QStringLiteral("角色") : charName);
     ui->textEdit->setEnabled(false);
     ui->btnNext->hide();
 
@@ -459,7 +460,8 @@ void ChatDialog::on_btnHistory_clicked()
             }
             else if (line.startsWith("角色："))
             {
-                ui->labelName->setText("她");
+                const QString cn = CurrentCharacterName();
+                ui->labelName->setText(cn.isEmpty() ? QStringLiteral("角色") : cn);
                 ui->textEdit->setEnabled(false);
                 ui->textEdit->setText(line.mid(3));
                 ui->btnNext->show();
@@ -481,7 +483,10 @@ void ChatDialog::on_btnHistory_clicked()
                     if (line.startsWith("用户："))
                         m_historyPanel->addItem(i, "你", line.mid(3));
                     else if (line.startsWith("角色："))
-                        m_historyPanel->addItem(i, "她", line.mid(3));
+                    {
+                        const QString cn = CurrentCharacterName();
+                        m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, line.mid(3));
+                    }
                     else
                         m_historyPanel->addItem(i, "记录", line);
                 }
@@ -496,7 +501,10 @@ void ChatDialog::on_btnHistory_clicked()
         if (line.startsWith("用户："))
             m_historyPanel->addItem(i, "你", line.mid(3));
         else if (line.startsWith("角色："))
-            m_historyPanel->addItem(i, "她", line.mid(3));
+        {
+            const QString cn = CurrentCharacterName();
+            m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, line.mid(3));
+        }
         else
             m_historyPanel->addItem(i, "记录", line);
     }
