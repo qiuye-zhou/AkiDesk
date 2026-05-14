@@ -84,3 +84,4 @@ CMakeLists.txt.user*
 .cache/clangd/
 .cache/clangd/index/
 .vscode/
+.claude/

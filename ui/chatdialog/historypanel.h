@@ -17,6 +17,7 @@ public:
 
 signals:
     void jumpToIndex(int index);
+    void deleteIndex(int index);
 
 protected:
     void paintEvent(QPaintEvent *event) override;

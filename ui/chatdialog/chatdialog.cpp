@@ -467,6 +467,26 @@ void ChatDialog::on_btnHistory_clicked()
             if (m_historyVisible)
                 on_btnHistory_clicked();
         });
+        connect(m_historyPanel, &HistoryPanel::deleteIndex, this, [this](int idx) {
+            if (idx < 0 || idx >= m_context.size())
+                return;
+            m_context.removeAt(idx);
+            saveContext();
+            if (m_historyVisible)
+            {
+                m_historyPanel->clear();
+                for (int i = 0; i < m_context.size(); ++i)
+                {
+                    const QString &line = m_context[i];
+                    if (line.startsWith("用户："))
+                        m_historyPanel->addItem(i, "你", line.mid(3));
+                    else if (line.startsWith("角色："))
+                        m_historyPanel->addItem(i, "她", line.mid(3));
+                    else
+                        m_historyPanel->addItem(i, "记录", line);
+                }
+            }
+        });
     }
 
     m_historyPanel->clear();

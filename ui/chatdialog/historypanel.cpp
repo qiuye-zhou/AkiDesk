@@ -76,9 +76,23 @@ void HistoryPanel::addItem(int index, const QString &role, const QString &text)
         emit jumpToIndex(index);
     });
 
+    auto *btnDelete = new QPushButton(itemWidget);
+    btnDelete->setToolTip("删除这条记录");
+    btnDelete->setFixedSize(24, 24);
+    btnDelete->setStyleSheet(
+        "QPushButton { background:transparent; border:none; border-radius:5px; }"
+        "QPushButton:hover { border:2px solid #FF3B30; color:#FF3B30; }"
+        "QPushButton:pressed { border:2px solid #D63028; }");
+    btnDelete->setText(QString::fromUtf8("\xc3\x97"));
+    btnDelete->setCursor(Qt::PointingHandCursor);
+    connect(btnDelete, &QPushButton::clicked, this, [this, index]() {
+        emit deleteIndex(index);
+    });
+
     itemLayout->addWidget(lblRole);
     itemLayout->addWidget(lblText, 1);
     itemLayout->addWidget(btnJump);
+    itemLayout->addWidget(btnDelete);
 
     layout->addWidget(itemWidget);
 }
