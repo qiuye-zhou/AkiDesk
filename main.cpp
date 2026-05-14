@@ -56,6 +56,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
     QCoreApplication::setApplicationName(APP_NAME);
     QCoreApplication::setApplicationVersion(APP_VERSION);
+    QApplication::setWindowIcon(QIcon(":/assets/logo.png"));
 
     const QString userDataDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
     const QString projectDir = QDir(userDataDir).filePath("AkiDesk");
