@@ -13,6 +13,7 @@
 
 #include <QAudioSource>
 #include <QBuffer>
+#include <QCloseEvent>
 #include <QDir>
 #include <QFileInfo>
 #include <QGraphicsOpacityEffect>
@@ -149,6 +150,13 @@ ChatDialog::ChatDialog(QWidget *parent)
 }
 
 ChatDialog::~ChatDialog() { delete ui; }
+
+void ChatDialog::closeEvent(QCloseEvent *event)
+{
+    if (m_historyPanel)
+        m_historyPanel->close();
+    QWidget::closeEvent(event);
+}
 
 /* 绘制圆角白色背景 + 阴影 */
 void ChatDialog::paintEvent(QPaintEvent *)
@@ -437,6 +445,13 @@ void ChatDialog::on_btnVoice_released()
 }
 
 void ChatDialog::toggleVisible() { setVisible(!isVisible()); }
+
+void ChatDialog::setVisible(bool visible)
+{
+    if (!visible && m_historyPanel)
+        m_historyPanel->hide();
+    QWidget::setVisible(visible);
+}
 
 void ChatDialog::on_btnHistory_clicked()
 {

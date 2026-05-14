@@ -21,6 +21,8 @@ public:
     explicit ChatDialog(QWidget *parent = nullptr);
     ~ChatDialog();
 
+    void setVisible(bool visible) override;
+
 public slots:
     void toggleVisible();
     void reloadAiConfig();
@@ -33,6 +35,7 @@ protected:
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void moveEvent(QMoveEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
 
 private slots:
     void on_btnNext_clicked();

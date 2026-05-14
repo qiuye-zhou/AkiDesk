@@ -56,12 +56,12 @@ void HistoryPanel::addItem(int index, const QString &role, const QString &text)
     itemLayout->setContentsMargins(6, 6, 6, 6);
 
     auto *lblRole = new QLabel(role, itemWidget);
-    lblRole->setFixedWidth(30);
+    lblRole->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
     lblRole->setStyleSheet("font-weight:bold; font-size:12px; color:#8E8E93;");
 
     auto *lblText = new QLabel(text, itemWidget);
     lblText->setWordWrap(true);
-    lblText->setSizePolicy(QSizePolicy::Ignored, QSizePolicy::Minimum);
+    lblText->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     lblText->setStyleSheet("font-size:12px; color:#1C1C1E;");
 
     auto *btnJump = new QPushButton(itemWidget);
