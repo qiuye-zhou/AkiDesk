@@ -49,12 +49,14 @@ void PageStt::onApiKeyChanged(const QString &text)
 {
     JsonConfig cfg(GlobalConfigPath);
     cfg.setValue("stt/apiKey", text);
+    emit configChanged();
 }
 
 void PageStt::onSecretKeyChanged(const QString &text)
 {
     JsonConfig cfg(GlobalConfigPath);
     cfg.setValue("stt/secretKey", text);
+    emit configChanged();
 }
 
 void PageStt::onDeviceChanged(int index)

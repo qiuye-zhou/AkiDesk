@@ -580,6 +580,10 @@ void SettingsWindow::setupUi()
     connect(pageVits, &PageVits::vitsModelListRefreshed, pageChar,
             &PageCharacter::refreshVitsModelList);
 
+    /* STT 页面信号：配置变更时通知 ChatDialog 刷新 */
+    connect(pageStt, &PageStt::configChanged, this,
+            [this]() { emit requestReloadAi(); });
+
     /* LLM 页面信号：服务商列表变更时通知角色页面刷新 */
     connect(pageLLM, &PageLLM::modelListRefreshed, pageChar,
             &PageCharacter::refreshServerList);

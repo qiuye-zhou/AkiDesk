@@ -18,6 +18,9 @@ private slots:
     void onSecretKeyChanged(const QString &text);
     void onDeviceChanged(int index);
 
+signals:
+    void configChanged();
+
 private:
     void loadDevices();
 

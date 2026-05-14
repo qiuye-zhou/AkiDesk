@@ -14,8 +14,23 @@ SpeechRecognizer::SpeechRecognizer(QObject *parent)
 {
 }
 
-void SpeechRecognizer::setApiKey(const QString &key) { m_apiKey = key; }
-void SpeechRecognizer::setSecretKey(const QString &key) { m_secretKey = key; }
+void SpeechRecognizer::setApiKey(const QString &key)
+{
+    if (m_apiKey != key)
+    {
+        m_apiKey = key;
+        m_accessToken.clear();
+    }
+}
+
+void SpeechRecognizer::setSecretKey(const QString &key)
+{
+    if (m_secretKey != key)
+    {
+        m_secretKey = key;
+        m_accessToken.clear();
+    }
+}
 
 /* 确保 access_token 有效，过期前自动刷新 */
 void SpeechRecognizer::ensureAccessToken(std::function<void(bool)> callback)
