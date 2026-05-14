@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PageStt</class>
+ <widget class="QWidget" name="PageStt">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing"><number>10</number></property>
+
+   <item>
+    <widget class="QGroupBox" name="grpBaiduApi">
+     <property name="title"><string>百度语音识别 API</string></property>
+     <layout class="QFormLayout" name="formLayout">
+      <property name="spacing"><number>10</number></property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="labelApiKey">
+        <property name="text"><string>API Key</string></property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="editApiKey">
+        <property name="placeholderText"><string>百度开放平台 API Key</string></property>
+        <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="labelSecretKey">
+        <property name="text"><string>Secret Key</string></property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QLineEdit" name="editSecretKey">
+        <property name="placeholderText"><string>百度开放平台 Secret Key</string></property>
+        <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+   <item>
+    <widget class="QGroupBox" name="grpDevice">
+     <property name="title"><string>语音输入设备</string></property>
+     <layout class="QVBoxLayout" name="v1">
+      <property name="spacing"><number>8</number></property>
+      <item>
+       <widget class="QComboBox" name="comboDevice">
+        <property name="placeholderText"><string>选择麦克风设备</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -5,15 +5,19 @@
 #include "config/AppPaths.h"
 #include "config/JsonConfig.h"
 #include "core/AiProvider.h"
+#include "core/SpeechRecognizer.h"
 #include "core/VitsEngine.h"
 #include "ui/settingswindow/pages/page_llm.h"
 #include "utils/DragHelper.h"
 #include "utils/ScrollHelper.h"
 
+#include <QAudioSource>
+#include <QBuffer>
 #include <QDir>
 #include <QFileInfo>
 #include <QGraphicsOpacityEffect>
 #include <QJsonArray>
+#include <QMediaDevices>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
@@ -34,6 +38,9 @@ ChatDialog::ChatDialog(QWidget *parent)
 
     /* 初始化 VITS 语音引擎 */
     m_vits = new VitsEngine(this);
+
+    /* 初始化语音识别引擎 */
+    m_stt = new SpeechRecognizer(this);
 
     reloadAiConfig();
     loadContext();
@@ -119,6 +126,26 @@ ChatDialog::ChatDialog(QWidget *parent)
         m_streamChinese.clear();
         m_vitsCursor = 0;
     });
+
+    /* 语音识别完成：填入输入框并自动发送 */
+    connect(m_stt, &SpeechRecognizer::recognized, this, [this](const QString &text) {
+        ui->btnVoice->setEnabled(true);
+        QString trimmed = text.trimmed();
+        if (!trimmed.isEmpty())
+            sendMessage(trimmed);
+    });
+
+    /* 语音识别错误 */
+    connect(m_stt, &SpeechRecognizer::errorOccurred, this, [this](const QString &err) {
+        ui->btnVoice->setEnabled(true);
+        ui->textEdit->setEnabled(true);
+        ui->textEdit->setText(err);
+        ui->btnVoice->setStyleSheet("");
+    });
+
+    /* 语音按钮：长按录音，松开识别 */
+    connect(ui->btnVoice, &QPushButton::pressed, this, &ChatDialog::on_btnVoice_pressed);
+    connect(ui->btnVoice, &QPushButton::released, this, &ChatDialog::on_btnVoice_released);
 }
 
 ChatDialog::~ChatDialog() { delete ui; }
@@ -255,55 +282,63 @@ void ChatDialog::keyReleaseEvent(QKeyEvent *event)
             ui->textEdit->clear();
             return;
         }
-
-        ui->labelName->setText("她");
-        ui->textEdit->setEnabled(false);
-        ui->btnNext->hide();
-
-        /* 读取当前角色的立绘表情列表，用于构建 system prompt */
-        QDir dir(CurrentCharacterTachiePath());
-        QStringList filters;
-        filters << "*.png" << "*.jpg" << "*.jpeg";
-        QStringList tachieNames;
-        for (const QString &f : dir.entryList(filters, QDir::Files))
-            tachieNames << f.section('.', 0, 0);
-
-        /* 读取角色设定 prompt */
-        JsonConfig assetCfg(CurrentCharacterAssetConfig());
-        QString charPrompt = assetCfg.value("prompt").toString().trimmed();
-
-        /* 构建 system prompt */
-        QString sysPrompt;
-        if (!charPrompt.isEmpty())
-            sysPrompt += "角色设定：" + charPrompt + "\n请始终保持该设定进行回复。\n\n";
-        sysPrompt += "你是一个桌宠 AI，输出内容必须严格按照以下格式：\n"
-                     "心情|中文|日语\n\n"
-                     "要求：\n"
-                     "1. 心情必须从以下列表中选择：" + tachieNames.join(", ") + "\n"
-                     "2. 中文是桌宠此刻想表达的内容\n"
-                     "3. 日语是中文内容的对应翻译\n"
-                     "4. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
-                     "示例输出：\n"
-                     "快乐|今天的天气真好呀！|今日はいい天気ですね！\n"
-                     "生气|为什么一直打扰我！|なんでずっと邪魔するの！";
-        m_ai->setSystemPrompt(sysPrompt);
-
-        /* 初始化本轮对话状态 */
-        m_lastInput = userInput;
-        JsonConfig charCfg(CurrentCharacterUserConfig());
-        m_vitsEnabled = charCfg.value("vitsEnable").toBool();
-        JsonConfig globalCfg(GlobalConfigPath);
-        m_vitsSentenceSplit = globalCfg.value("vits/SentenceSplit", true).toBool();
-        m_streamRaw.clear();
-        m_streamChinese.clear();
-        m_vitsCursor = 0;
-        if (m_vits)
-            m_vits->stopAll();
-
-        m_ai->chat(buildMessageWithContext(userInput));
-        ui->textEdit->setText("……");
+        sendMessage(userInput);
     }
     QWidget::keyReleaseEvent(event);
+}
+
+/* 发送用户消息给 AI（供键盘输入和语音识别共用） */
+void ChatDialog::sendMessage(const QString &text)
+{
+    if (text.isEmpty())
+        return;
+
+    ui->labelName->setText("她");
+    ui->textEdit->setEnabled(false);
+    ui->btnNext->hide();
+
+    /* 读取当前角色的立绘表情列表，用于构建 system prompt */
+    QDir dir(CurrentCharacterTachiePath());
+    QStringList filters;
+    filters << "*.png" << "*.jpg" << "*.jpeg";
+    QStringList tachieNames;
+    for (const QString &f : dir.entryList(filters, QDir::Files))
+        tachieNames << f.section('.', 0, 0);
+
+    /* 读取角色设定 prompt */
+    JsonConfig assetCfg(CurrentCharacterAssetConfig());
+    QString charPrompt = assetCfg.value("prompt").toString().trimmed();
+
+    /* 构建 system prompt */
+    QString sysPrompt;
+    if (!charPrompt.isEmpty())
+        sysPrompt += "角色设定：" + charPrompt + "\n请始终保持该设定进行回复。\n\n";
+    sysPrompt += "你是一个桌宠 AI，输出内容必须严格按照以下格式：\n"
+                 "心情|中文|日语\n\n"
+                 "要求：\n"
+                 "1. 心情必须从以下列表中选择：" + tachieNames.join(", ") + "\n"
+                 "2. 中文是桌宠此刻想表达的内容\n"
+                 "3. 日语是中文内容的对应翻译\n"
+                 "4. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
+                 "示例输出：\n"
+                 "快乐|今天的天气真好呀！|今日はいい天気ですね！\n"
+                 "生气|为什么一直打扰我！|なんでずっと邪魔するの！";
+    m_ai->setSystemPrompt(sysPrompt);
+
+    /* 初始化本轮对话状态 */
+    m_lastInput = text;
+    JsonConfig charCfg(CurrentCharacterUserConfig());
+    m_vitsEnabled = charCfg.value("vitsEnable").toBool();
+    JsonConfig globalCfg(GlobalConfigPath);
+    m_vitsSentenceSplit = globalCfg.value("vits/SentenceSplit", true).toBool();
+    m_streamRaw.clear();
+    m_streamChinese.clear();
+    m_vitsCursor = 0;
+    if (m_vits)
+        m_vits->stopAll();
+
+    m_ai->chat(buildMessageWithContext(text));
+    ui->textEdit->setText("……");
 }
 
 /* 点击"继续"按钮：恢复输入状态 */
@@ -313,6 +348,91 @@ void ChatDialog::on_btnNext_clicked()
     ui->textEdit->clear();
     ui->textEdit->setEnabled(true);
     ui->btnNext->hide();
+}
+
+void ChatDialog::on_btnVoice_pressed()
+{
+    if (m_recording || !ui->textEdit->isEnabled())
+        return;
+
+    /* 查找用户配置的麦克风设备 */
+    JsonConfig cfg(GlobalConfigPath);
+    QString deviceId = cfg.value("stt/deviceId").toString();
+    QAudioDevice device;
+    if (!deviceId.isEmpty())
+    {
+        for (const QAudioDevice &dev : QMediaDevices::audioInputs())
+        {
+            if (dev.id() == deviceId)
+            {
+                device = dev;
+                break;
+            }
+        }
+    }
+    if (device.isNull())
+        device = QMediaDevices::defaultAudioInput();
+    if (device.isNull())
+    {
+        ui->textEdit->setText("未检测到麦克风设备");
+        return;
+    }
+
+    /* 配置录音格式：16000Hz, 单声道, 16bit PCM */
+    QAudioFormat format;
+    format.setSampleRate(16000);
+    format.setChannelCount(1);
+    format.setSampleFormat(QAudioFormat::Int16);
+
+    m_audioBuffer = new QBuffer(this);
+    m_audioBuffer->open(QBuffer::WriteOnly);
+
+    m_audioSource = new QAudioSource(device, format, this);
+    m_audioSource->start(m_audioBuffer);
+    m_recording = true;
+
+    /* 按钮变红表示录音中 */
+    ui->btnVoice->setStyleSheet(
+        "QPushButton { background-color: #FF3B30; color: #FFFFFF; border: none;"
+        " border-radius: 5px; font-size: 16px; }");
+    ui->textEdit->setText("正在录音…");
+}
+
+void ChatDialog::on_btnVoice_released()
+{
+    if (!m_recording)
+        return;
+    m_recording = false;
+
+    /* 停止录音 */
+    if (m_audioSource)
+    {
+        m_audioSource->stop();
+        m_audioSource->deleteLater();
+        m_audioSource = nullptr;
+    }
+
+    QByteArray pcmData;
+    if (m_audioBuffer)
+    {
+        m_audioBuffer->close();
+        pcmData = m_audioBuffer->data();
+        m_audioBuffer->deleteLater();
+        m_audioBuffer = nullptr;
+    }
+
+    /* 恢复按钮样式 */
+    ui->btnVoice->setStyleSheet("");
+
+    if (pcmData.isEmpty())
+    {
+        ui->textEdit->clear();
+        return;
+    }
+
+    ui->textEdit->setText("识别中…");
+    ui->btnVoice->setEnabled(false);
+    m_stt->recognize(pcmData);
 }
 
 void ChatDialog::toggleVisible() { setVisible(!isVisible()); }
@@ -439,6 +559,10 @@ void ChatDialog::reloadAiConfig()
     m_ai->setModel(charCfg.value("modelSelect").toString());
 
     JsonConfig globalCfg(GlobalConfigPath);
+
+    /* 加载语音识别配置 */
+    m_stt->setApiKey(globalCfg.value("stt/apiKey").toString());
+    m_stt->setSecretKey(globalCfg.value("stt/secretKey").toString());
 
     /* 先读取 VITS 启用状态再使用 */
     m_vitsEnabled = charCfg.value("vitsEnable").toBool();

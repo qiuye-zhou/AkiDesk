@@ -5,6 +5,7 @@
 #include "pages/page_llm.h"
 #include "pages/page_character.h"
 #include "pages/page_vits.h"
+#include "pages/page_stt.h"
 #include "pages/page_plugin.h"
 #include "pages/page_about.h"
 
@@ -515,6 +516,7 @@ void SettingsWindow::setupUi()
     m_sidebar->addItem("对话模型");
     m_sidebar->addItem("角色设置");
     m_sidebar->addItem("语音合成");
+    m_sidebar->addItem("语音识别");
     m_sidebar->addItem("插件管理");
     m_sidebar->addItem("关于");
     m_sidebar->setCurrentRow(0);
@@ -540,16 +542,18 @@ void SettingsWindow::setupUi()
     auto *pageLLM = new PageLLM(this);
     auto *pageChar = new PageCharacter(this);
     auto *pageVits = new PageVits(this);
+    auto *pageStt = new PageStt(this);
     auto *pagePlugin = new PagePlugin(this);
     auto *pageAbout = new PageAbout(this);
 
     /* 确保页面在滚动区域内正确展开 */
-    for (QWidget *page : {static_cast<QWidget *>(pageLLM), static_cast<QWidget *>(pageChar), static_cast<QWidget *>(pageVits), static_cast<QWidget *>(pagePlugin), static_cast<QWidget *>(pageAbout)})
+    for (QWidget *page : {static_cast<QWidget *>(pageLLM), static_cast<QWidget *>(pageChar), static_cast<QWidget *>(pageVits), static_cast<QWidget *>(pageStt), static_cast<QWidget *>(pagePlugin), static_cast<QWidget *>(pageAbout)})
         page->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 
     m_stack->addWidget(makeScrollable(pageLLM));
     m_stack->addWidget(makeScrollable(pageChar));
     m_stack->addWidget(makeScrollable(pageVits));
+    m_stack->addWidget(makeScrollable(pageStt));
     m_stack->addWidget(makeScrollable(pagePlugin));
     m_stack->addWidget(makeScrollable(pageAbout));
 

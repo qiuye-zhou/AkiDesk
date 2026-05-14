@@ -31,6 +31,8 @@ set(PROJECT_SOURCES
 
     core/AiProvider.h
     core/AiProvider.cpp
+    core/SpeechRecognizer.h
+    core/SpeechRecognizer.cpp
     core/VitsEngine.h
     core/VitsEngine.cpp
 
@@ -70,6 +72,10 @@ set(PROJECT_SOURCES
     ui/settingswindow/pages/page_vits.h
     ui/settingswindow/pages/page_vits.cpp
     ui/settingswindow/pages/page_vits.ui
+
+    ui/settingswindow/pages/page_stt.h
+    ui/settingswindow/pages/page_stt.cpp
+    ui/settingswindow/pages/page_stt.ui
 
     ui/settingswindow/pages/page_plugin.h
     ui/settingswindow/pages/page_plugin.cpp

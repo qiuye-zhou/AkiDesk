@@ -6,7 +6,10 @@
 
 class AiProvider;
 class VitsEngine;
+class SpeechRecognizer;
 class HistoryPanel;
+class QAudioSource;
+class QBuffer;
 
 namespace Ui { class ChatDialog; }
 
@@ -34,6 +37,8 @@ protected:
 private slots:
     void on_btnNext_clicked();
     void on_btnHistory_clicked();
+    void on_btnVoice_pressed();
+    void on_btnVoice_released();
 
 private:
     void initWindow();
@@ -42,6 +47,7 @@ private:
     void appendHistory(const QString &line);
     QString buildMessageWithContext(const QString &input) const;
     void stopPendingState();
+    void sendMessage(const QString &text);
 
     static int findSentenceEnd(const QString &text, int from);
 
@@ -50,6 +56,11 @@ private:
 
     AiProvider *m_ai = nullptr;
     VitsEngine *m_vits = nullptr;
+    SpeechRecognizer *m_stt = nullptr;
+
+    QAudioSource *m_audioSource = nullptr;
+    QBuffer *m_audioBuffer = nullptr;
+    bool m_recording = false;
 
     QStringList m_context;
 
