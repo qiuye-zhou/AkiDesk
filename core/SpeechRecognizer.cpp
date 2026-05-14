@@ -91,7 +91,7 @@ void SpeechRecognizer::doRecognize(const QByteArray &pcmData)
                           "?dev_pid=1537&cuid=AkiDesk&token=%1")
                       .arg(m_accessToken);
 
-    QNetworkRequest request(QUrl(url));
+    QNetworkRequest request{QUrl(url)};
     request.setHeader(QNetworkRequest::ContentTypeHeader,
                       "audio/pcm;rate=16000");
     request.setHeader(QNetworkRequest::ContentLengthHeader, pcmData.size());
