@@ -28,17 +28,17 @@ static void copyResourceFile(const QString &resPath, const QString &destPath)
 static void deployDefaultConfig(const QString &projectDir)
 {
     /* 确保目录存在 */
-    QDir().mkpath(QDir(projectDir).filePath("Character/demo/Tachie"));
+    QDir().mkpath(QDir(projectDir).filePath("Character/Atri/Tachie"));
     QDir().mkpath(QDir(projectDir).filePath("Character/Config"));
     QDir().mkpath(QDir(projectDir).filePath("Plugin/Anime"));
 
     /* 复制角色配置文件 */
-    copyResourceFile(":/defaults/Character/demo/config.json",
-                     QDir(projectDir).filePath("Character/demo/config.json"));
-    copyResourceFile(":/defaults/Character/demo/context.json",
-                     QDir(projectDir).filePath("Character/demo/context.json"));
-    copyResourceFile(":/defaults/Character/demo/Tachie/default.png",
-                     QDir(projectDir).filePath("Character/demo/Tachie/default.png"));
+    copyResourceFile(":/defaults/Character/Atri/config.json",
+                     QDir(projectDir).filePath("Character/Atri/config.json"));
+    copyResourceFile(":/defaults/Character/Atri/context.json",
+                     QDir(projectDir).filePath("Character/Atri/context.json"));
+    copyResourceFile(":/defaults/Character/Atri/Tachie/default.png",
+                     QDir(projectDir).filePath("Character/atri/Tachie/default.png"));
     copyResourceFile(":/defaults/Character/Config/config.json",
                      QDir(projectDir).filePath("Character/Config/config.json"));
 

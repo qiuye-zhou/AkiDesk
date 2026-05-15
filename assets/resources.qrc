@@ -2,9 +2,9 @@
     <qresource prefix="/">
         <file alias="assets/logo.png">logo.png</file>
         <file alias="defaults/config.ini">default_config/AkiDesk/config.ini</file>
-        <file alias="defaults/Character/demo/config.json">default_config/AkiDesk/Character/demo/config.json</file>
-        <file alias="defaults/Character/demo/Tachie/default.png">default_config/AkiDesk/Character/demo/Tachie/default.png</file>
-        <file alias="defaults/Character/demo/context.json">default_config/AkiDesk/Character/demo/context.json</file>
+        <file alias="defaults/Character/Atri/config.json">default_config/AkiDesk/Character/Atri/config.json</file>
+        <file alias="defaults/Character/Atri/Tachie/default.png">default_config/AkiDesk/Character/Atri/Tachie/default.png</file>
+        <file alias="defaults/Character/Atri/context.json">default_config/AkiDesk/Character/Atri/context.json</file>
         <file alias="defaults/Character/Config/config.json">default_config/AkiDesk/Character/Config/config.json</file>
         <file alias="defaults/Plugin/Anime/Basic Animation Package.json">default_config/AkiDesk/Plugin/Anime/Basic Animation Package.json</file>
     </qresource>
