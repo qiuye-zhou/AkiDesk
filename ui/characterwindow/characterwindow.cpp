@@ -153,9 +153,20 @@ void CharacterWindow::setTachieImage(const QString &name)
     }
 
     if (ok)
+    {
         m_currentPixmap = loaded;
-    else if (m_currentPixmap.isNull())
-        return;
+    }
+    else
+    {
+        /* 没有匹配的立绘，尝试回退到 default */
+        if (normalizedName.compare("default", Qt::CaseInsensitive) != 0)
+        {
+            setTachieImage("default");
+            return;
+        }
+        if (m_currentPixmap.isNull())
+            return;
+    }
 
     /* 读取用户配置的缩放百分比 */
     JsonConfig cfg(CurrentCharacterUserConfig());

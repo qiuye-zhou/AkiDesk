@@ -21,6 +21,9 @@ static void copyResourceFile(const QString &resPath, const QString &destPath)
     if (!QFile::exists(destPath))
     {
         QFile::copy(resPath, destPath);
+        QFile::setPermissions(destPath,
+            QFileDevice::ReadOwner | QFileDevice::WriteOwner |
+            QFileDevice::ReadGroup | QFileDevice::ReadOther);
     }
 }
 
@@ -69,6 +72,9 @@ int main(int argc, char *argv[])
         deployDefaultConfig(projectDir);
         /* 部署默认本地配置 */
         QFile::copy(":/defaults/config.ini", iniPath);
+        QFile::setPermissions(iniPath,
+            QFileDevice::ReadOwner | QFileDevice::WriteOwner |
+            QFileDevice::ReadGroup | QFileDevice::ReadOther);
     }
 
     /* 确保所有数据目录存在 */
