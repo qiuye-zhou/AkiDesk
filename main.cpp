@@ -41,7 +41,7 @@ static void deployDefaultConfig(const QString &projectDir)
     copyResourceFile(":/defaults/Character/Atri/context.json",
                      QDir(projectDir).filePath("Character/Atri/context.json"));
     copyResourceFile(":/defaults/Character/Atri/Tachie/default.png",
-                     QDir(projectDir).filePath("Character/atri/Tachie/default.png"));
+                     QDir(projectDir).filePath("Character/Atri/Tachie/default.png"));
     copyResourceFile(":/defaults/Character/Config/config.json",
                      QDir(projectDir).filePath("Character/Config/config.json"));
 

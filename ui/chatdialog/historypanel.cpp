@@ -7,6 +7,21 @@
 #include <QPushButton>
 #include <QScrollBar>
 #include <QVBoxLayout>
+#include <QTimer>
+
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <dwmapi.h>
+#ifndef DWMWA_WINDOW_CORNER_PREFERENCE
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#endif
+#ifndef DWMWA_BORDER_COLOR
+#define DWMWA_BORDER_COLOR 34
+#endif
+#ifndef DWMWCP_DONOTROUND
+#define DWMWCP_DONOTROUND 1
+#endif
+#endif
 
 HistoryPanel::HistoryPanel(QWidget *parent)
     : QWidget(parent), ui(new Ui::HistoryPanel)
@@ -15,6 +30,23 @@ HistoryPanel::HistoryPanel(QWidget *parent)
     setWindowFlags(Qt::Tool | Qt::FramelessWindowHint | Qt::WindowStaysOnTopHint);
     setWindowOpacity(0.9);
     setAttribute(Qt::WA_TranslucentBackground);
+
+#ifdef Q_OS_WIN
+    QTimer::singleShot(0, this, [this]() {
+        HWND hwnd = reinterpret_cast<HWND>(winId());
+        SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        MARGINS margins = {-1, -1, -1, -1};
+        DwmExtendFrameIntoClientArea(hwnd, &margins);
+        DWORD cornerPref = DWMWCP_DONOTROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+                              &cornerPref, sizeof(cornerPref));
+        COLORREF borderColor = 0xFFFFFFFE;
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
+                              &borderColor, sizeof(borderColor));
+    });
+#endif
 
     ui->scrollArea->setWidgetResizable(true);
     connect(ui->scrollArea->verticalScrollBar(), &QScrollBar::rangeChanged, this,

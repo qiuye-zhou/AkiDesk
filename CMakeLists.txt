@@ -111,6 +111,10 @@ if(UNIX AND NOT APPLE)
     target_link_libraries(AkiDesk PRIVATE X11::X11 X11::Xext)
 endif()
 
+if(WIN32)
+    target_link_libraries(AkiDesk PRIVATE dwmapi)
+endif()
+
 include(GNUInstallDirs)
 install(TARGETS AkiDesk
     BUNDLE DESTINATION .

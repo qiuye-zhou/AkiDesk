@@ -22,6 +22,21 @@
 #include <X11/extensions/shape.h>
 #endif
 
+#ifdef Q_OS_WIN
+#include <windows.h>
+#include <dwmapi.h>
+/* Windows 11 DWM 属性 */
+#ifndef DWMWA_WINDOW_CORNER_PREFERENCE
+#define DWMWA_WINDOW_CORNER_PREFERENCE 33
+#endif
+#ifndef DWMWA_BORDER_COLOR
+#define DWMWA_BORDER_COLOR 34
+#endif
+#ifndef DWMWCP_DONOTROUND
+#define DWMWCP_DONOTROUND 1
+#endif
+#endif
+
 CharacterWindow::CharacterWindow(QWidget *parent)
     : QWidget(parent), ui(new Ui::CharacterWindow)
 {
@@ -47,6 +62,27 @@ CharacterWindow::CharacterWindow(QWidget *parent)
 
     /* 延迟加载默认立绘 */
     QTimer::singleShot(0, this, [this]() { setTachieImage("default"); });
+
+#ifdef Q_OS_WIN
+    /* 窗口显示后去掉原生边框 */
+    QTimer::singleShot(0, this, [this]() {
+        HWND hwnd = reinterpret_cast<HWND>(winId());
+        SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+        /* DWM 玻璃效果覆盖全窗口 */
+        MARGINS margins = {-1, -1, -1, -1};
+        DwmExtendFrameIntoClientArea(hwnd, &margins);
+        /* Windows 11: 去掉圆角和边框 */
+        DWORD cornerPref = DWMWCP_DONOTROUND;
+        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+                              &cornerPref, sizeof(cornerPref));
+        COLORREF borderColor = 0xFFFFFFFE; /* DWMWA_COLOR_NONE */
+        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
+                              &borderColor, sizeof(borderColor));
+    });
+#endif
+
     m_pluginManager.reload();
 }
 
@@ -201,7 +237,6 @@ void CharacterWindow::setTachieSize(int sizePercent)
 #ifdef Q_OS_LINUX
     applyInputShapeFromImage();
 #else
-    /* Windows 下不裁剪窗口形状，避免半透明边缘被硬裁切后出现"略微缩小/边缘异常" */
     clearMask();
 #endif
 }
