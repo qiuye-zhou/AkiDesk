@@ -32,20 +32,7 @@ HistoryPanel::HistoryPanel(QWidget *parent)
     setAttribute(Qt::WA_TranslucentBackground);
 
 #ifdef Q_OS_WIN
-    QTimer::singleShot(0, this, [this]() {
-        HWND hwnd = reinterpret_cast<HWND>(winId());
-        SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
-                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-        MARGINS margins = {-1, -1, -1, -1};
-        DwmExtendFrameIntoClientArea(hwnd, &margins);
-        DWORD cornerPref = DWMWCP_DONOTROUND;
-        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
-                              &cornerPref, sizeof(cornerPref));
-        COLORREF borderColor = 0xFFFFFFFE;
-        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
-                              &borderColor, sizeof(borderColor));
-    });
+    QTimer::singleShot(0, this, &HistoryPanel::removeBorder);
 #endif
 
     ui->scrollArea->setWidgetResizable(true);
@@ -140,7 +127,7 @@ void HistoryPanel::paintEvent(QPaintEvent *)
     painter.fillPath(path, QBrush(Qt::white));
 
     QColor color(0, 0, 0, 50);
-    for (int i = 0; i < 5; ++i)
+    for (int i = 1; i < 5; ++i)
     {
         QPainterPath shadowPath;
         shadowPath.setFillRule(Qt::WindingFill);
@@ -150,4 +137,28 @@ void HistoryPanel::paintEvent(QPaintEvent *)
         painter.setPen(color);
         painter.drawPath(shadowPath);
     }
+}
+
+void HistoryPanel::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    QTimer::singleShot(0, this, &HistoryPanel::removeBorder);
+}
+
+void HistoryPanel::removeBorder()
+{
+#ifdef Q_OS_WIN
+    HWND hwnd = reinterpret_cast<HWND>(winId());
+    SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(hwnd, &margins);
+    DWORD cornerPref = DWMWCP_DONOTROUND;
+    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+                          &cornerPref, sizeof(cornerPref));
+    COLORREF borderColor = 0xFFFFFFFE;
+    DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
+                          &borderColor, sizeof(borderColor));
+#endif
 }

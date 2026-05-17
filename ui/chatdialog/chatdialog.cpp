@@ -192,7 +192,7 @@ void ChatDialog::paintEvent(QPaintEvent *)
     painter.fillPath(path, QBrush(Qt::white));
 
     QColor shadow(0, 0, 0, 50);
-    for (int i = 0; i < 5; ++i)
+    for (int i = 1; i < 5; ++i)
     {
         QPainterPath sp;
         sp.setFillRule(Qt::WindingFill);
@@ -216,20 +216,7 @@ void ChatDialog::initWindow()
     setAttribute(Qt::WA_TranslucentBackground);
 
 #ifdef Q_OS_WIN
-    QTimer::singleShot(0, this, [this]() {
-        HWND hwnd = reinterpret_cast<HWND>(winId());
-        SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
-        SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
-                     SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-        MARGINS margins = {-1, -1, -1, -1};
-        DwmExtendFrameIntoClientArea(hwnd, &margins);
-        DWORD cornerPref = DWMWCP_DONOTROUND;
-        DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
-                              &cornerPref, sizeof(cornerPref));
-        COLORREF borderColor = 0xFFFFFFFE;
-        DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
-                              &borderColor, sizeof(borderColor));
-    });
+    QTimer::singleShot(0, this, &ChatDialog::removeBorder);
 #endif
 
     ui->btnNext->hide();
@@ -246,6 +233,24 @@ void ChatDialog::initWindow()
         ui->scrollBar->setPageStep(ui->textEdit->verticalScrollBar()->pageStep());
         ui->scrollBar->setVisible(max > min);
     });
+}
+
+void ChatDialog::removeBorder()
+{
+#ifdef Q_OS_WIN
+    HWND hwnd = reinterpret_cast<HWND>(winId());
+    SetWindowLongPtr(hwnd, GWL_STYLE, WS_POPUP | WS_VISIBLE);
+    SetWindowPos(hwnd, nullptr, 0, 0, 0, 0,
+                 SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
+    MARGINS margins = {-1, -1, -1, -1};
+    DwmExtendFrameIntoClientArea(hwnd, &margins);
+    DWORD cornerPref = DWMWCP_DONOTROUND;
+    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE,
+                          &cornerPref, sizeof(cornerPref));
+    COLORREF borderColor = 0xFFFFFFFE;
+    DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR,
+                          &borderColor, sizeof(borderColor));
+#endif
 }
 
 /* 从本地文件加载对话上下文历史 */
@@ -490,6 +495,12 @@ void ChatDialog::setVisible(bool visible)
     if (!visible && m_historyPanel)
         m_historyPanel->hide();
     QWidget::setVisible(visible);
+}
+
+void ChatDialog::showEvent(QShowEvent *event)
+{
+    QWidget::showEvent(event);
+    QTimer::singleShot(0, this, &ChatDialog::removeBorder);
 }
 
 void ChatDialog::on_btnHistory_clicked()

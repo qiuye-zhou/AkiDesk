@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QShowEvent>
 #include <QStringList>
 #include <QWidget>
 
@@ -32,6 +33,7 @@ signals:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void showEvent(QShowEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
     void moveEvent(QMoveEvent *event) override;
@@ -45,6 +47,7 @@ private slots:
 
 private:
     void initWindow();
+    void removeBorder();
     void loadContext();
     void saveContext() const;
     void appendHistory(const QString &line);
