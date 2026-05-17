@@ -78,6 +78,7 @@ CMakeLists.txt.user*
 .rcc/
 .uic/
 /build*/
+/dist
 
 #clangd cache/index
 .cache/

@@ -89,6 +89,7 @@ set(PROJECT_SOURCES
 )
 
 qt_add_executable(AkiDesk
+    WIN32
     MANUAL_FINALIZATION
     ${PROJECT_SOURCES}
 )
