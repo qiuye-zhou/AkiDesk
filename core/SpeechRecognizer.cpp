@@ -111,9 +111,12 @@ void SpeechRecognizer::doRecognize(const QByteArray &pcmData)
                       "audio/pcm;rate=16000");
     request.setHeader(QNetworkRequest::ContentLengthHeader, pcmData.size());
 
-    QNetworkReply *reply = m_network->post(request, pcmData);
+    m_currentReply = m_network->post(request, pcmData);
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
+        QNetworkReply *reply = m_currentReply;
+        m_currentReply = nullptr;
+
         if (reply->error() != QNetworkReply::NoError)
         {
             emit errorOccurred("语音识别请求失败: " + reply->errorString());
@@ -143,4 +146,14 @@ void SpeechRecognizer::doRecognize(const QByteArray &pcmData)
         emit recognized(result.at(0).toString());
         reply->deleteLater();
     });
+}
+
+void SpeechRecognizer::cancel()
+{
+    if (m_currentReply)
+    {
+        m_currentReply->abort();
+        m_currentReply->deleteLater();
+        m_currentReply = nullptr;
+    }
 }

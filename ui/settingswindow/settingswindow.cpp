@@ -591,6 +591,11 @@ void SettingsWindow::setupUi()
 
 void SettingsWindow::closeEvent(QCloseEvent *event)
 {
-    event->ignore();
-    hide();
+    if (QApplication::closingDown())
+        event->accept();
+    else
+    {
+        event->ignore();
+        hide();
+    }
 }

@@ -174,11 +174,22 @@ void AiProvider::finalizeStreamReply(QNetworkReply *reply)
     else
     {
         /* 处理缓冲区中的剩余数据 */
-        if (!m_streamBuffers[reply].isEmpty())
+        if (m_streamBuffers.contains(reply) && !m_streamBuffers[reply].isEmpty())
             handleStreamReadyRead(reply);
         emit replyReceived(m_streamReplies.value(reply));
     }
     m_streamBuffers.remove(reply);
     m_streamReplies.remove(reply);
     reply->deleteLater();
+}
+
+void AiProvider::cancelAll()
+{
+    QList<QNetworkReply *> replies = m_streamBuffers.keys();
+    for (QNetworkReply *reply : replies)
+    {
+        reply->abort();
+    }
+    m_streamBuffers.clear();
+    m_streamReplies.clear();
 }

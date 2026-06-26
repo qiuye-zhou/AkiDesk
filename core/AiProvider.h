@@ -38,6 +38,9 @@ public:
     /* 发起对话请求 */
     void chat(const QString &userMessage);
 
+    /* 取消所有正在进行的请求 */
+    void cancelAll();
+
 signals:
     /* 非流式完整回复 */
     void replyReceived(const QString &reply);

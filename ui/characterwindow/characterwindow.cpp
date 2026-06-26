@@ -90,8 +90,10 @@ CharacterWindow::~CharacterWindow()
 {
     if (m_activeAnim)
     {
+        m_activeAnim->disconnect();
         m_activeAnim->stop();
-        delete m_activeAnim;
+        m_activeAnim->deleteLater();
+        m_activeAnim = nullptr;
     }
     delete ui;
 }
@@ -317,14 +319,12 @@ void CharacterWindow::tryPlayAnimation(const QString &actionName)
     if (charName.isEmpty())
         return;
 
-    /* 从角色资产配置中读取 动作名 → 动画唯一键 的映射 */
     JsonConfig assetCfg(CurrentCharacterAssetConfig());
     QJsonObject animMap = assetCfg.value("tachieAnimations", QJsonObject()).toObject();
     QString uniqueKey = animMap.value(actionName).toString().trimmed();
     if (uniqueKey.isEmpty())
         return;
 
-    m_pluginManager.reload();
     PluginDefinition plugin;
     PluginAnimation animation;
     if (!m_pluginManager.findAnimation(uniqueKey, plugin, animation))

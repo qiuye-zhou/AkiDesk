@@ -6,6 +6,7 @@
 #include <functional>
 
 class QNetworkAccessManager;
+class QNetworkReply;
 
 /* 百度语音识别引擎：获取 access_token + RAW PCM 识别 */
 class SpeechRecognizer : public QObject
@@ -21,6 +22,9 @@ public:
     /* 提交 PCM 音频数据进行识别（16000Hz, 单声道, 16bit） */
     void recognize(const QByteArray &pcmData);
 
+    /* 取消当前正在进行的识别请求 */
+    void cancel();
+
 signals:
     void recognized(const QString &text);
     void errorOccurred(const QString &msg);
@@ -35,4 +39,6 @@ private:
 
     QString m_accessToken;
     QDateTime m_tokenExpiry;
+
+    QNetworkReply *m_currentReply = nullptr;
 };

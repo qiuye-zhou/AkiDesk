@@ -107,6 +107,12 @@ bool loadPluginFromFile(const QString &filePath,
                         PluginDefinition &outPlugin,
                         QString &outError)
 {
+    if (filePath.isEmpty())
+    {
+        outError = "插件文件路径为空";
+        return false;
+    }
+
     JsonConfig cfg(filePath);
     if (!cfg.load())
     {
@@ -121,10 +127,15 @@ bool loadPluginFromFile(const QString &filePath,
     outPlugin.author = cfg.value("author").toString().trimmed();
     outPlugin.link = cfg.value("link").toString().trimmed();
 
-    if (outPlugin.name.isEmpty() || outPlugin.version.isEmpty() ||
-        outPlugin.author.isEmpty() || outPlugin.link.isEmpty())
+    QStringList missingFields;
+    if (outPlugin.name.isEmpty()) missingFields.append("name");
+    if (outPlugin.version.isEmpty()) missingFields.append("version");
+    if (outPlugin.author.isEmpty()) missingFields.append("author");
+    if (outPlugin.link.isEmpty()) missingFields.append("link");
+
+    if (!missingFields.isEmpty())
     {
-        outError = "插件必须包含 name/version/author/link";
+        outError = QString("插件缺少必填字段: %1").arg(missingFields.join(", "));
         return false;
     }
 

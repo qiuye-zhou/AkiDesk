@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
     CharacterWindow charWin;
     charWin.show();
 
-    SettingsWindow *settingsWin = nullptr;
+    QScopedPointer<SettingsWindow> settingsWin;
 
     /* 窗口间信号连接 */
     /* 右键立绘 → 切换对话框显隐 */
@@ -119,15 +119,15 @@ int main(int argc, char *argv[])
     auto showSettings = [&]() {
         if (!settingsWin)
         {
-            settingsWin = new SettingsWindow(&chatWin, &charWin);
+            settingsWin.reset(new SettingsWindow(&chatWin, &charWin));
             /* 设置窗口的信号连接 */
-            QObject::connect(settingsWin, &SettingsWindow::requestReloadAi,
+            QObject::connect(settingsWin.data(), &SettingsWindow::requestReloadAi,
                              &chatWin, &ChatDialog::reloadAiConfig);
-            QObject::connect(settingsWin, &SettingsWindow::requestReloadCharImage,
+            QObject::connect(settingsWin.data(), &SettingsWindow::requestReloadCharImage,
                              &charWin, &CharacterWindow::setTachieImage);
-            QObject::connect(settingsWin, &SettingsWindow::requestSetTachieSize,
+            QObject::connect(settingsWin.data(), &SettingsWindow::requestSetTachieSize,
                              &charWin, &CharacterWindow::setTachieSize);
-            QObject::connect(settingsWin, &SettingsWindow::requestResetTachieLoc,
+            QObject::connect(settingsWin.data(), &SettingsWindow::requestResetTachieLoc,
                              &charWin, &CharacterWindow::resetPosition);
         }
         settingsWin->show();

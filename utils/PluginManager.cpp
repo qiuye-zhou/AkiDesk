@@ -60,14 +60,21 @@ bool PluginManager::findAnimation(const QString &uniqueKey,
                                   PluginDefinition &outPlugin,
                                   PluginAnimation &outAnimation) const
 {
-    if (!m_keyIndex.contains(uniqueKey))
+    if (uniqueKey.isEmpty())
         return false;
-    Index idx = m_keyIndex.value(uniqueKey);
+
+    auto it = m_keyIndex.constFind(uniqueKey);
+    if (it == m_keyIndex.constEnd())
+        return false;
+
+    const Index &idx = it.value();
     if (idx.pluginIdx < 0 || idx.pluginIdx >= m_plugins.size())
         return false;
+
     const PluginDefinition &p = m_plugins.at(idx.pluginIdx);
     if (idx.animIdx < 0 || idx.animIdx >= p.animations.size())
         return false;
+
     outPlugin = p;
     outAnimation = p.animations.at(idx.animIdx);
     return true;

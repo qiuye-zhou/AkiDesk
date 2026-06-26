@@ -171,7 +171,16 @@ ChatDialog::ChatDialog(QWidget *parent)
     connect(ui->btnVoice, &QPushButton::released, this, &ChatDialog::on_btnVoice_released);
 }
 
-ChatDialog::~ChatDialog() { delete ui; }
+ChatDialog::~ChatDialog()
+{
+    stopPendingState();
+    if (m_historyPanel)
+    {
+        m_historyPanel->close();
+        delete m_historyPanel;
+    }
+    delete ui;
+}
 
 void ChatDialog::closeEvent(QCloseEvent *event)
 {
@@ -307,14 +316,40 @@ void ChatDialog::stopPendingState()
     m_streamChinese.clear();
     m_vitsEnabled = false;
     m_vitsCursor = 0;
+
+    if (m_ai)
+        m_ai->cancelAll();
+
     if (m_vits)
         m_vits->stopAll();
+
+    if (m_stt)
+        m_stt->cancel();
+
+    if (m_recording)
+    {
+        m_recording = false;
+        if (m_audioSource)
+        {
+            m_audioSource->stop();
+            m_audioSource->deleteLater();
+            m_audioSource = nullptr;
+        }
+        if (m_audioBuffer)
+        {
+            m_audioBuffer->close();
+            m_audioBuffer->deleteLater();
+            m_audioBuffer = nullptr;
+        }
+    }
 }
 
 /* 按下回车发送消息 */
 void ChatDialog::keyPressEvent(QKeyEvent *event)
 {
-    m_pressedKeys.append(event->key());
+    if (!m_pressedKeys.contains(event->key()))
+        m_pressedKeys.append(event->key());
+    QWidget::keyPressEvent(event);
 }
 
 void ChatDialog::keyReleaseEvent(QKeyEvent *event)
@@ -323,7 +358,6 @@ void ChatDialog::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Return && !m_pressedKeys.contains(Qt::Key_Shift)
         && ui->textEdit->isEnabled())
     {
-        /* 获取用户输入 */
         QTextCursor cursor = ui->textEdit->textCursor();
         if (cursor.hasSelection())
             cursor.clearSelection();

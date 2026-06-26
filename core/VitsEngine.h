@@ -8,6 +8,7 @@ class QNetworkAccessManager;
 class QMediaPlayer;
 class QAudioOutput;
 class QTemporaryFile;
+class QNetworkReply;
 
 /* VITS 语音合成引擎：按句合成 + 双队列串行播放 */
 class VitsEngine : public QObject
@@ -48,6 +49,7 @@ private:
     QStringList m_pendingTexts;
     QList<QTemporaryFile *> m_readyFiles;
     QTemporaryFile *m_currentFile = nullptr;
+    QNetworkReply *m_currentReply = nullptr;
     bool m_synthesizing = false;
     bool m_stopped = false;
 };

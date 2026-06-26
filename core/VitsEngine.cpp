@@ -50,6 +50,14 @@ void VitsEngine::stopAll()
     m_stopped = true;
     m_pendingTexts.clear();
     m_synthesizing = false;
+
+    if (m_currentReply)
+    {
+        m_currentReply->abort();
+        m_currentReply->deleteLater();
+        m_currentReply = nullptr;
+    }
+
     m_player->stop();
     for (auto *f : m_readyFiles)
         f->deleteLater();
@@ -75,17 +83,19 @@ void VitsEngine::startNextSynthesis()
     m_synthesizing = true;
     const QString text = m_pendingTexts.takeFirst();
 
-    /* 构建请求 URL：/voice/vits?text={text}&id={speaker} */
     QString base = m_apiUrl.endsWith('/') ? m_apiUrl.chopped(1) : m_apiUrl;
     QString url = QString("%1/voice/vits?text=%2&id=%3")
                       .arg(base)
                       .arg(QString(QUrl::toPercentEncoding(text)))
                       .arg(QString(QUrl::toPercentEncoding(m_speaker)));
 
-    QNetworkReply *reply = m_network->get(QNetworkRequest(QUrl(url)));
+    m_currentReply = m_network->get(QNetworkRequest(QUrl(url)));
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
         m_synthesizing = false;
+        QNetworkReply *reply = m_currentReply;
+        m_currentReply = nullptr;
+
         if (!m_stopped && reply->error() == QNetworkReply::NoError)
         {
             QByteArray audioData = reply->readAll();
