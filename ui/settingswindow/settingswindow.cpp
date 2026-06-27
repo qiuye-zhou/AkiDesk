@@ -9,6 +9,7 @@
 #include "pages/page_plugin.h"
 #include "pages/page_about.h"
 
+#include <QApplication>
 #include <QCloseEvent>
 #include <QHBoxLayout>
 #include <QListWidget>
