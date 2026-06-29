@@ -33,6 +33,7 @@ public:
 
 signals:
     void playbackFinished();
+    void errorOccurred(const QString &error);
 
 private:
     void startNextSynthesis();
