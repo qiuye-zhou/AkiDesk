@@ -7,7 +7,13 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QTemporaryFile>
+#include <QTimer>
 #include <QUrl>
+#include <QPointer>
+
+namespace {
+constexpr int kTimeoutMs = 30000;
+}
 
 VitsEngine::VitsEngine(QObject *parent)
     : QObject(parent)
@@ -17,17 +23,19 @@ VitsEngine::VitsEngine(QObject *parent)
 {
     m_player->setAudioOutput(m_audioOutput);
 
-    /* 当前音频播放完毕后，尝试播放队列中的下一段 */
+    QPointer<VitsEngine> self(this);
     connect(m_player, &QMediaPlayer::playbackStateChanged, this,
-            [this](QMediaPlayer::PlaybackState state) {
+            [self](QMediaPlayer::PlaybackState state) {
+                if (!self)
+                    return;
                 if (state == QMediaPlayer::StoppedState)
                 {
-                    if (m_currentFile)
+                    if (self->m_currentFile)
                     {
-                        m_currentFile->deleteLater();
-                        m_currentFile = nullptr;
+                        self->m_currentFile->deleteLater();
+                        self->m_currentFile = nullptr;
                     }
-                    startNextPlayback();
+                    self->startNextPlayback();
                 }
             });
 }
@@ -51,11 +59,12 @@ void VitsEngine::stopAll()
     m_pendingTexts.clear();
     m_synthesizing = false;
 
-    if (m_currentReply)
+    QNetworkReply *reply = m_currentReply;
+    m_currentReply = nullptr;
+    if (reply)
     {
-        m_currentReply->abort();
-        m_currentReply->deleteLater();
-        m_currentReply = nullptr;
+        reply->abort();
+        reply->deleteLater();
     }
 
     m_player->stop();
@@ -90,11 +99,26 @@ void VitsEngine::startNextSynthesis()
                       .arg(QString(QUrl::toPercentEncoding(m_speaker)));
 
     m_currentReply = m_network->get(QNetworkRequest(QUrl(url)));
+    QNetworkReply *reply = m_currentReply;
 
-    connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
+    QPointer<VitsEngine> self(this);
+    QPointer<QNetworkReply> replyPtr(reply);
+    QTimer::singleShot(kTimeoutMs, this, [self, replyPtr]() {
+        if (!self || !replyPtr)
+            return;
+        if (replyPtr->isRunning())
+        {
+            emit self->errorOccurred("语音合成请求超时");
+            replyPtr->abort();
+        }
+    });
+    connect(reply, &QNetworkReply::finished, this, [this, reply, self]() {
+        if (!self)
+            return;
+
         m_synthesizing = false;
-        QNetworkReply *reply = m_currentReply;
-        m_currentReply = nullptr;
+        if (m_currentReply == reply)
+            m_currentReply = nullptr;
 
         if (!m_stopped && reply->error() == QNetworkReply::NoError)
         {
@@ -124,6 +148,8 @@ void VitsEngine::startNextSynthesis()
 /* 播放就绪队列中的下一段音频 */
 void VitsEngine::startNextPlayback()
 {
+    if (m_stopped)
+        return;
     if (m_player->playbackState() != QMediaPlayer::StoppedState)
         return;
     if (m_readyFiles.isEmpty())

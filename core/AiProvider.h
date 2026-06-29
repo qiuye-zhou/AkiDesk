@@ -51,12 +51,11 @@ signals:
     /* 模型列表返回 */
     void modelsReceived(const QList<ModelInfo> &models);
 
-private slots:
-    void handleModelsReply();
-
 private:
+    void handleModelsReply(QNetworkReply *reply);
     void handleStreamReadyRead(QNetworkReply *reply);
     void finalizeStreamReply(QNetworkReply *reply);
+    void abortCurrentRequest();
 
     QNetworkAccessManager *m_network;
     QString m_apiKey;
@@ -65,7 +64,7 @@ private:
     bool m_streamEnabled = true;
     QString m_systemPrompt;
 
-    /* 每个流式请求维护独立的缓冲区 */
+    QNetworkReply *m_activeReply = nullptr;
     QHash<QNetworkReply *, QByteArray> m_streamBuffers;
     QHash<QNetworkReply *, QString> m_streamReplies;
 };

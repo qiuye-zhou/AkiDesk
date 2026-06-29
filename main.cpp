@@ -20,7 +20,11 @@ static void copyResourceFile(const QString &resPath, const QString &destPath)
 {
     if (!QFile::exists(destPath))
     {
-        QFile::copy(resPath, destPath);
+        if (!QFile::copy(resPath, destPath))
+        {
+            qWarning() << "Failed to copy resource file:" << resPath << "to" << destPath;
+            return;
+        }
         QFile::setPermissions(destPath,
             QFileDevice::ReadOwner | QFileDevice::WriteOwner |
             QFileDevice::ReadGroup | QFileDevice::ReadOther);
@@ -30,12 +34,20 @@ static void copyResourceFile(const QString &resPath, const QString &destPath)
 /* 部署默认配置文件 */
 static void deployDefaultConfig(const QString &projectDir)
 {
-    /* 确保目录存在 */
-    QDir().mkpath(QDir(projectDir).filePath("Character/Atri/Tachie"));
-    QDir().mkpath(QDir(projectDir).filePath("Character/Config"));
-    QDir().mkpath(QDir(projectDir).filePath("Plugin/Anime"));
+    QStringList requiredDirs = {
+        QDir(projectDir).filePath("Character/Atri/Tachie"),
+        QDir(projectDir).filePath("Character/Config"),
+        QDir(projectDir).filePath("Plugin/Anime")
+    };
 
-    /* 复制角色配置文件 */
+    for (const QString &dir : requiredDirs)
+    {
+        if (!QDir().mkpath(dir))
+        {
+            qWarning() << "Failed to create directory:" << dir;
+        }
+    }
+
     copyResourceFile(":/defaults/Character/Atri/config.json",
                      QDir(projectDir).filePath("Character/Atri/config.json"));
     copyResourceFile(":/defaults/Character/Atri/context.json",
@@ -45,7 +57,6 @@ static void deployDefaultConfig(const QString &projectDir)
     copyResourceFile(":/defaults/Character/Config/config.json",
                      QDir(projectDir).filePath("Character/Config/config.json"));
 
-    /* 复制动画插件 */
     copyResourceFile(":/defaults/Plugin/Anime/Basic Animation Package.json",
                      QDir(projectDir).filePath("Plugin/Anime/Basic Animation Package.json"));
 }

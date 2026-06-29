@@ -6,7 +6,13 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
+#include <QTimer>
 #include <QUrlQuery>
+#include <QPointer>
+
+namespace {
+constexpr int kTimeoutMs = 15000;
+}
 
 SpeechRecognizer::SpeechRecognizer(QObject *parent)
     : QObject(parent)
@@ -52,7 +58,22 @@ void SpeechRecognizer::ensureAccessToken(std::function<void(bool)> callback)
 
     QNetworkReply *reply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply, callback]() {
+    QPointer<QNetworkReply> replyPtr(reply);
+    QTimer::singleShot(kTimeoutMs, this, [replyPtr]() {
+        if (replyPtr && replyPtr->isRunning())
+        {
+            replyPtr->abort();
+        }
+    });
+
+    QPointer<SpeechRecognizer> self(this);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, callback, self]() {
+        if (!self)
+        {
+            reply->deleteLater();
+            return;
+        }
+
         if (reply->error() != QNetworkReply::NoError)
         {
             emit errorOccurred("获取 access_token 失败: " + reply->errorString());
@@ -112,10 +133,24 @@ void SpeechRecognizer::doRecognize(const QByteArray &pcmData)
     request.setHeader(QNetworkRequest::ContentLengthHeader, pcmData.size());
 
     m_currentReply = m_network->post(request, pcmData);
+    QNetworkReply *reply = m_currentReply;
 
-    connect(m_currentReply, &QNetworkReply::finished, this, [this]() {
-        QNetworkReply *reply = m_currentReply;
-        m_currentReply = nullptr;
+    QPointer<SpeechRecognizer> self(this);
+    QPointer<QNetworkReply> replyPtr(reply);
+    QTimer::singleShot(kTimeoutMs, this, [self, replyPtr]() {
+        if (!self || !replyPtr)
+            return;
+        if (replyPtr->isRunning())
+        {
+            emit self->errorOccurred("语音识别请求超时");
+            replyPtr->abort();
+        }
+    });
+    connect(reply, &QNetworkReply::finished, this, [this, reply, self]() {
+        if (!self)
+            return;
+        if (m_currentReply == reply)
+            m_currentReply = nullptr;
 
         if (reply->error() != QNetworkReply::NoError)
         {
@@ -150,10 +185,11 @@ void SpeechRecognizer::doRecognize(const QByteArray &pcmData)
 
 void SpeechRecognizer::cancel()
 {
-    if (m_currentReply)
+    QNetworkReply *reply = m_currentReply;
+    m_currentReply = nullptr;
+    if (reply)
     {
-        m_currentReply->abort();
-        m_currentReply->deleteLater();
-        m_currentReply = nullptr;
+        reply->abort();
+        reply->deleteLater();
     }
 }

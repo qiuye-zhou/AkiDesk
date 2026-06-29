@@ -7,6 +7,13 @@
 #include <QNetworkReply>
 #include <QNetworkRequest>
 #include <QUrlQuery>
+#include <QTimer>
+#include <QPointer>
+
+namespace {
+constexpr int kTimeoutMs = 60000;
+constexpr int kMaxParseIterations = 1000;
+}
 
 AiProvider::AiProvider(QObject *parent)
     : QObject(parent), m_network(new QNetworkAccessManager(this))
@@ -25,12 +32,28 @@ void AiProvider::fetchModels()
     QNetworkRequest request(QUrl(m_apiUrl + "/models"));
     request.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
     QNetworkReply *reply = m_network->get(request);
-    connect(reply, &QNetworkReply::finished, this, &AiProvider::handleModelsReply);
+
+    QPointer<QNetworkReply> replyPtr(reply);
+    QTimer::singleShot(kTimeoutMs, this, [replyPtr]() {
+        if (replyPtr && replyPtr->isRunning())
+        {
+            replyPtr->abort();
+        }
+    });
+
+    QPointer<AiProvider> self(this);
+    connect(reply, &QNetworkReply::finished, this, [reply, self]() {
+        if (!self)
+        {
+            reply->deleteLater();
+            return;
+        }
+        self->handleModelsReply(reply);
+    });
 }
 
-void AiProvider::handleModelsReply()
+void AiProvider::handleModelsReply(QNetworkReply *reply)
 {
-    auto *reply = qobject_cast<QNetworkReply *>(sender());
     if (!reply)
         return;
     reply->deleteLater();
@@ -62,9 +85,24 @@ void AiProvider::handleModelsReply()
     emit modelsReceived(models);
 }
 
+void AiProvider::abortCurrentRequest()
+{
+    QNetworkReply *reply = m_activeReply;
+    m_activeReply = nullptr;
+    if (reply)
+    {
+        reply->abort();
+        reply->deleteLater();
+    }
+    m_streamBuffers.clear();
+    m_streamReplies.clear();
+}
+
 /* 发起对话请求 */
 void AiProvider::chat(const QString &userMessage)
 {
+    abortCurrentRequest();
+
     QJsonObject body;
     body["model"] = m_model;
     body["stream"] = m_streamEnabled;
@@ -87,21 +125,47 @@ void AiProvider::chat(const QString &userMessage)
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
     request.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
 
-    QNetworkReply *reply = m_network->post(request, QJsonDocument(body).toJson());
+    m_activeReply = m_network->post(request, QJsonDocument(body).toJson());
+    QNetworkReply *reply = m_activeReply;
     m_streamBuffers[reply] = QByteArray();
     m_streamReplies[reply] = QString();
 
+    QPointer<AiProvider> self(this);
+    QPointer<QNetworkReply> replyPtr(reply);
+    QTimer::singleShot(kTimeoutMs, this, [self, replyPtr]() {
+        if (!self || !replyPtr)
+            return;
+        if (replyPtr->isRunning())
+        {
+            emit self->errorOccurred("请求超时");
+            replyPtr->abort();
+        }
+    });
     if (m_streamEnabled)
     {
-        connect(reply, &QNetworkReply::readyRead, this, [this, reply]()
-                { handleStreamReadyRead(reply); });
-        connect(reply, &QNetworkReply::finished, this, [this, reply]()
-                { finalizeStreamReply(reply); });
+        connect(reply, &QNetworkReply::readyRead, this, [this, reply, self]()
+                {
+                    if (!self)
+                        return;
+                    handleStreamReadyRead(reply);
+                });
+        connect(reply, &QNetworkReply::finished, this, [this, reply, self]()
+                {
+                    if (!self)
+                        return;
+                    if (self->m_activeReply == reply)
+                        self->m_activeReply = nullptr;
+                    finalizeStreamReply(reply);
+                });
     }
     else
     {
-        connect(reply, &QNetworkReply::finished, this, [this, reply]()
+        connect(reply, &QNetworkReply::finished, this, [this, reply, self]()
                 {
+                    if (!self)
+                        return;
+                    if (self->m_activeReply == reply)
+                        self->m_activeReply = nullptr;
                     if (reply->error() != QNetworkReply::NoError)
                     {
                         emit errorOccurred(reply->errorString());
@@ -118,16 +182,21 @@ void AiProvider::chat(const QString &userMessage)
                     }
                     m_streamBuffers.remove(reply);
                     m_streamReplies.remove(reply);
-                    reply->deleteLater(); });
+                    reply->deleteLater();
+                });
     }
 }
 
 /* 处理 SSE 流式数据：data: {...}\n\n 格式 */
 void AiProvider::handleStreamReadyRead(QNetworkReply *reply)
 {
+    if (!m_streamBuffers.contains(reply))
+        return;
+
     m_streamBuffers[reply].append(reply->readAll());
 
-    while (true)
+    int iterations = 0;
+    while (iterations++ < kMaxParseIterations)
     {
         int newlinePos = m_streamBuffers[reply].indexOf("\n");
         if (newlinePos < 0)
@@ -139,7 +208,6 @@ void AiProvider::handleStreamReadyRead(QNetworkReply *reply)
         if (line.isEmpty())
             continue;
 
-        /* SSE 格式：data: {...} */
         if (!line.startsWith("data:"))
             continue;
         QByteArray jsonPart = line.mid(5).trimmed();
@@ -161,6 +229,11 @@ void AiProvider::handleStreamReadyRead(QNetworkReply *reply)
             m_streamReplies[reply] += delta;
             emit replyChunkReceived(delta);
         }
+    }
+
+    if (iterations >= kMaxParseIterations)
+    {
+        emit errorOccurred("流式数据解析次数超限");
     }
 }
 
@@ -185,11 +258,5 @@ void AiProvider::finalizeStreamReply(QNetworkReply *reply)
 
 void AiProvider::cancelAll()
 {
-    QList<QNetworkReply *> replies = m_streamBuffers.keys();
-    for (QNetworkReply *reply : replies)
-    {
-        reply->abort();
-    }
-    m_streamBuffers.clear();
-    m_streamReplies.clear();
+    abortCurrentRequest();
 }

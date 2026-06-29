@@ -54,6 +54,7 @@ private:
     QString buildMessageWithContext(const QString &input) const;
     void stopPendingState();
     void sendMessage(const QString &text);
+    void refreshCachedAssets();
 
     static int findSentenceEnd(const QString &text, int from);
 
@@ -80,4 +81,8 @@ private:
     bool m_historyVisible = false;
     QPoint m_lastPos;
     QList<int> m_pressedKeys;
+
+    QStringList m_cachedTachieNames;
+    QString m_cachedCharPrompt;
+    QString m_cachedCharName;
 };

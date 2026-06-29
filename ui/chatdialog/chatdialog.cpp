@@ -46,6 +46,7 @@ ChatDialog::ChatDialog(QWidget *parent)
     : QWidget(parent), ui(new Ui::ChatDialog)
 {
     ui->setupUi(this);
+    m_lastPos = pos();
     initWindow();
 
     /* 初始化 AI 提供者 */
@@ -379,31 +380,17 @@ void ChatDialog::sendMessage(const QString &text)
     if (text.isEmpty())
         return;
 
-    const QString charName = CurrentCharacterName();
-    ui->labelName->setText(charName.isEmpty() ? QStringLiteral("角色") : charName);
+    ui->labelName->setText(m_cachedCharName.isEmpty() ? QStringLiteral("角色") : m_cachedCharName);
     ui->textEdit->setEnabled(false);
     ui->btnNext->hide();
 
-    /* 读取当前角色的立绘表情列表，用于构建 system prompt */
-    QDir dir(CurrentCharacterTachiePath());
-    QStringList filters;
-    filters << "*.png" << "*.jpg" << "*.jpeg";
-    QStringList tachieNames;
-    for (const QString &f : dir.entryList(filters, QDir::Files))
-        tachieNames << f.section('.', 0, 0);
-
-    /* 读取角色设定 prompt */
-    JsonConfig assetCfg(CurrentCharacterAssetConfig());
-    QString charPrompt = assetCfg.value("prompt").toString().trimmed();
-
-    /* 构建 system prompt */
     QString sysPrompt;
-    if (!charPrompt.isEmpty())
-        sysPrompt += "角色设定：" + charPrompt + "\n请始终保持该设定进行回复。\n\n";
+    if (!m_cachedCharPrompt.isEmpty())
+        sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
     sysPrompt += "你是一个桌宠 AI，输出内容必须严格按照以下格式：\n"
                  "心情|中文|日语\n\n"
                  "要求：\n"
-                 "1. 心情必须从以下列表中选择：" + tachieNames.join(", ") + "\n"
+                 "1. 心情必须从以下列表中选择：" + m_cachedTachieNames.join(", ") + "\n"
                  "2. 中文是桌宠此刻想表达的内容\n"
                  "3. 日语是中文内容的对应翻译\n"
                  "4. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
@@ -441,6 +428,22 @@ void ChatDialog::on_btnVoice_pressed()
 {
     if (m_recording || !ui->textEdit->isEnabled())
         return;
+
+    if (m_stt)
+        m_stt->cancel();
+
+    if (m_audioSource)
+    {
+        m_audioSource->stop();
+        m_audioSource->deleteLater();
+        m_audioSource = nullptr;
+    }
+    if (m_audioBuffer)
+    {
+        m_audioBuffer->close();
+        m_audioBuffer->deleteLater();
+        m_audioBuffer = nullptr;
+    }
 
     /* 查找用户配置的麦克风设备 */
     JsonConfig cfg(GlobalConfigPath);
@@ -672,6 +675,21 @@ void ChatDialog::on_btnHistory_clicked()
     }
 }
 
+void ChatDialog::refreshCachedAssets()
+{
+    QDir dir(CurrentCharacterTachiePath());
+    QStringList filters;
+    filters << "*.png" << "*.jpg" << "*.jpeg";
+    m_cachedTachieNames.clear();
+    for (const QString &f : dir.entryList(filters, QDir::Files))
+        m_cachedTachieNames << f.section('.', 0, 0);
+
+    JsonConfig assetCfg(CurrentCharacterAssetConfig());
+    m_cachedCharPrompt = assetCfg.value("prompt").toString().trimmed();
+
+    m_cachedCharName = CurrentCharacterName();
+}
+
 void ChatDialog::reloadAiConfig()
 {
     JsonConfig charCfg(CurrentCharacterUserConfig());
@@ -687,11 +705,9 @@ void ChatDialog::reloadAiConfig()
 
     JsonConfig globalCfg(GlobalConfigPath);
 
-    /* 加载语音识别配置 */
     m_stt->setApiKey(globalCfg.value("stt/apiKey").toString());
     m_stt->setSecretKey(globalCfg.value("stt/secretKey").toString());
 
-    /* 先读取 VITS 启用状态再使用 */
     m_vitsEnabled = charCfg.value("vitsEnable").toBool();
     if (m_vitsEnabled)
     {
@@ -702,6 +718,7 @@ void ChatDialog::reloadAiConfig()
     }
 
     loadContext();
+    refreshCachedAssets();
 }
 
 /* 对话框移动时，历史面板跟随移动 */
