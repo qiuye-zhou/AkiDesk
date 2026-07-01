@@ -31,6 +31,8 @@ set(PROJECT_SOURCES
 
     core/AiProvider.h
     core/AiProvider.cpp
+    core/CommandExecutor.h
+    core/CommandExecutor.cpp
     core/SpeechRecognizer.h
     core/SpeechRecognizer.cpp
     core/VitsEngine.h

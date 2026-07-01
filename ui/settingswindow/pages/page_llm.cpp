@@ -61,7 +61,12 @@ PageLLM::PageLLM(QWidget *parent)
     loadConfig();
 }
 
-PageLLM::~PageLLM() { delete ui; }
+PageLLM::~PageLLM()
+{
+    if (m_ai)
+        m_ai->cancelAll();
+    delete ui;
+}
 
 /* 查找指定名称的服务商，返回 baseUrl 和 apiKey */
 bool PageLLM::findProvider(const QString &name, QString &baseUrl, QString &apiKey)

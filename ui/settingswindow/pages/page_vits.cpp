@@ -9,6 +9,7 @@
 #include <QJsonObject>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
+#include <QPointer>
 #include <QStringListModel>
 
 PageVits::PageVits(QWidget *parent)
@@ -35,7 +36,16 @@ PageVits::PageVits(QWidget *parent)
     connect(ui->checkSentenceSplit, &QCheckBox::toggled, this, &PageVits::onSentenceSplitToggled);
 }
 
-PageVits::~PageVits() { delete ui; }
+PageVits::~PageVits()
+{
+    QNetworkReply *reply = m_currentReply;
+    m_currentReply = nullptr;
+    if (reply)
+    {
+        reply->abort();
+    }
+    delete ui;
+}
 
 void PageVits::onApiUrlChanged(const QString &text)
 {
@@ -52,10 +62,27 @@ void PageVits::onSentenceSplitToggled(bool checked)
 /* 向 vits-simple-api 的 /voice/speakers 接口请求模型说话人列表 */
 void PageVits::onFetchSpeakers()
 {
-    QUrl url(ui->editApiUrl->text() + "/voice/speakers");
-    QNetworkReply *reply = m_network->get(QNetworkRequest(url));
+    QNetworkReply *reply = m_currentReply;
+    m_currentReply = nullptr;
+    if (reply)
+    {
+        reply->abort();
+    }
 
-    connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+    QUrl url(ui->editApiUrl->text() + "/voice/speakers");
+    m_currentReply = m_network->get(QNetworkRequest(url));
+    reply = m_currentReply;
+
+    QPointer<PageVits> self(this);
+    connect(reply, &QNetworkReply::finished, this, [this, reply, self]() {
+        if (!self)
+        {
+            reply->deleteLater();
+            return;
+        }
+        if (m_currentReply == reply)
+            m_currentReply = nullptr;
+
         if (reply->error() != QNetworkReply::NoError)
         {
             reply->deleteLater();

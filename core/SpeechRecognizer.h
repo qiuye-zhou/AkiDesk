@@ -15,6 +15,7 @@ class SpeechRecognizer : public QObject
 
 public:
     explicit SpeechRecognizer(QObject *parent = nullptr);
+    ~SpeechRecognizer();
 
     void setApiKey(const QString &key);
     void setSecretKey(const QString &key);

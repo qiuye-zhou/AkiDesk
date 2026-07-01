@@ -28,4 +28,5 @@ private:
     Ui::PageVits *ui;
     QNetworkAccessManager *m_network;
     QStringListModel *m_speakerListModel;
+    QNetworkReply *m_currentReply = nullptr;
 };

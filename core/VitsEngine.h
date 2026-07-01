@@ -17,6 +17,7 @@ class VitsEngine : public QObject
 
 public:
     explicit VitsEngine(QObject *parent = nullptr);
+    ~VitsEngine();
 
     /* 设置合成参数 */
     void setApiUrl(const QString &url);

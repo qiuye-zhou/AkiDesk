@@ -8,6 +8,7 @@
 class AiProvider;
 class VitsEngine;
 class SpeechRecognizer;
+class CommandExecutor;
 class HistoryPanel;
 class QAudioSource;
 class QBuffer;
@@ -64,6 +65,7 @@ private:
     AiProvider *m_ai = nullptr;
     VitsEngine *m_vits = nullptr;
     SpeechRecognizer *m_stt = nullptr;
+    CommandExecutor *m_commandExecutor = nullptr;
 
     QAudioSource *m_audioSource = nullptr;
     QBuffer *m_audioBuffer = nullptr;

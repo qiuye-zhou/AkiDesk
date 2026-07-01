@@ -29,9 +29,12 @@ void AiProvider::setSystemPrompt(const QString &prompt) { m_systemPrompt = promp
 /* 请求可用模型列表 */
 void AiProvider::fetchModels()
 {
+    abortCurrentRequest();
+
     QNetworkRequest request(QUrl(m_apiUrl + "/models"));
     request.setRawHeader("Authorization", ("Bearer " + m_apiKey).toUtf8());
-    QNetworkReply *reply = m_network->get(request);
+    m_activeReply = m_network->get(request);
+    QNetworkReply *reply = m_activeReply;
 
     QPointer<QNetworkReply> replyPtr(reply);
     QTimer::singleShot(kTimeoutMs, this, [replyPtr]() {
@@ -42,12 +45,14 @@ void AiProvider::fetchModels()
     });
 
     QPointer<AiProvider> self(this);
-    connect(reply, &QNetworkReply::finished, this, [reply, self]() {
+    connect(reply, &QNetworkReply::finished, this, [this, reply, self]() {
         if (!self)
         {
             reply->deleteLater();
             return;
         }
+        if (self->m_activeReply == reply)
+            self->m_activeReply = nullptr;
         self->handleModelsReply(reply);
     });
 }
@@ -56,11 +61,11 @@ void AiProvider::handleModelsReply(QNetworkReply *reply)
 {
     if (!reply)
         return;
-    reply->deleteLater();
 
     if (reply->error() != QNetworkReply::NoError)
     {
         emit errorOccurred(reply->errorString());
+        reply->deleteLater();
         return;
     }
 
@@ -68,6 +73,7 @@ void AiProvider::handleModelsReply(QNetworkReply *reply)
     if (!doc.isObject())
     {
         emit errorOccurred("模型列表响应格式错误");
+        reply->deleteLater();
         return;
     }
 
@@ -83,6 +89,7 @@ void AiProvider::handleModelsReply(QNetworkReply *reply)
         models.append(info);
     }
     emit modelsReceived(models);
+    reply->deleteLater();
 }
 
 void AiProvider::abortCurrentRequest()
@@ -92,7 +99,6 @@ void AiProvider::abortCurrentRequest()
     if (reply)
     {
         reply->abort();
-        reply->deleteLater();
     }
     m_streamBuffers.clear();
     m_streamReplies.clear();

@@ -196,7 +196,6 @@ void CharacterWindow::setTachieImage(const QString &name)
     }
     else
     {
-        /* 没有匹配的立绘，尝试回退到 default */
         if (normalizedName.compare("default", Qt::CaseInsensitive) != 0)
         {
             setTachieImage("default");

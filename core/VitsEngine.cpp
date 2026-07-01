@@ -40,6 +40,11 @@ VitsEngine::VitsEngine(QObject *parent)
             });
 }
 
+VitsEngine::~VitsEngine()
+{
+    stopAll();
+}
+
 void VitsEngine::setApiUrl(const QString &url) { m_apiUrl = url; }
 void VitsEngine::setModel(const QString &model) { m_model = model; }
 void VitsEngine::setSpeaker(const QString &speaker) { m_speaker = speaker; }
@@ -64,7 +69,6 @@ void VitsEngine::stopAll()
     if (reply)
     {
         reply->abort();
-        reply->deleteLater();
     }
 
     m_player->stop();

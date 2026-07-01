@@ -20,6 +20,11 @@ SpeechRecognizer::SpeechRecognizer(QObject *parent)
 {
 }
 
+SpeechRecognizer::~SpeechRecognizer()
+{
+    cancel();
+}
+
 void SpeechRecognizer::setApiKey(const QString &key)
 {
     if (m_apiKey != key)
@@ -47,6 +52,8 @@ void SpeechRecognizer::ensureAccessToken(std::function<void(bool)> callback)
         return;
     }
 
+    cancel();
+
     QNetworkRequest request(QUrl("https://aip.baidubce.com/oauth/2.0/token"));
     request.setHeader(QNetworkRequest::ContentTypeHeader,
                       "application/x-www-form-urlencoded");
@@ -56,7 +63,8 @@ void SpeechRecognizer::ensureAccessToken(std::function<void(bool)> callback)
     params.addQueryItem("client_id", m_apiKey);
     params.addQueryItem("client_secret", m_secretKey);
 
-    QNetworkReply *reply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
+    m_currentReply = m_network->post(request, params.query(QUrl::FullyEncoded).toUtf8());
+    QNetworkReply *reply = m_currentReply;
 
     QPointer<QNetworkReply> replyPtr(reply);
     QTimer::singleShot(kTimeoutMs, this, [replyPtr]() {
@@ -73,6 +81,8 @@ void SpeechRecognizer::ensureAccessToken(std::function<void(bool)> callback)
             reply->deleteLater();
             return;
         }
+        if (self->m_currentReply == reply)
+            self->m_currentReply = nullptr;
 
         if (reply->error() != QNetworkReply::NoError)
         {
@@ -190,6 +200,5 @@ void SpeechRecognizer::cancel()
     if (reply)
     {
         reply->abort();
-        reply->deleteLater();
     }
 }

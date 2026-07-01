@@ -5,6 +5,7 @@
 #include "config/AppPaths.h"
 #include "config/JsonConfig.h"
 #include "core/AiProvider.h"
+#include "core/CommandExecutor.h"
 #include "core/SpeechRecognizer.h"
 #include "core/VitsEngine.h"
 #include "ui/settingswindow/pages/page_llm.h"
@@ -59,6 +60,9 @@ ChatDialog::ChatDialog(QWidget *parent)
     /* 初始化语音识别引擎 */
     m_stt = new SpeechRecognizer(this);
 
+    /* 初始化命令执行器 */
+    m_commandExecutor = new CommandExecutor(this);
+
     reloadAiConfig();
     loadContext();
 
@@ -97,12 +101,13 @@ ChatDialog::ChatDialog(QWidget *parent)
         }
     });
 
-    /* 完整回复到达：最终解析、补漏语音、更新立绘、保存历史 */
+    /* 完整回复到达：最终解析、补漏语音、更新立绘、保存历史、执行命令 */
     connect(m_ai, &AiProvider::replyReceived, this, [this](const QString &reply) {
         const QString full = m_streamRaw.isEmpty() ? reply : m_streamRaw;
         const QString mood = full.section('|', 0, 0).trimmed();
         const QString chinese = full.section('|', 1, 1).trimmed();
         const QString japanese = full.section('|', 2, 2).trimmed();
+        const QString commandStr = full.section('|', 5, 5).trimmed();
 
         ui->textEdit->setText(chinese);
         ui->btnNext->show();
@@ -120,6 +125,16 @@ ChatDialog::ChatDialog(QWidget *parent)
         }
 
         emit requestSetTachie(mood);
+
+        /* 解析并执行命令 */
+        if (m_commandExecutor && !commandStr.isEmpty())
+        {
+            CommandExecutor::Command cmd;
+            if (m_commandExecutor->parseCommand(commandStr, cmd))
+            {
+                m_commandExecutor->executeCommandWithConfirm(cmd);
+            }
+        }
 
         /* 保存对话历史 */
         if (!m_lastInput.isEmpty())
@@ -387,16 +402,23 @@ void ChatDialog::sendMessage(const QString &text)
     QString sysPrompt;
     if (!m_cachedCharPrompt.isEmpty())
         sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
-    sysPrompt += "你是一个桌宠 AI，输出内容必须严格按照以下格式：\n"
-                 "心情|中文|日语\n\n"
+    sysPrompt += "你是一个桌宠 AI，可以帮助用户控制电脑。输出内容必须严格按照以下格式：\n"
+                 "心情|中文|日语|||COMMAND:type:value\n\n"
                  "要求：\n"
                  "1. 心情必须从以下列表中选择：" + m_cachedTachieNames.join(", ") + "\n"
                  "2. 中文是桌宠此刻想表达的内容\n"
                  "3. 日语是中文内容的对应翻译\n"
-                 "4. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
+                 "4. COMMAND 部分是可选的，用于执行电脑控制命令\n"
+                 "5. COMMAND 格式：COMMAND:openapp:应用名 或 COMMAND:openurl:网址 或 COMMAND:search:搜索内容\n"
+                 "6. 支持的应用：vscode, notepad, chrome, edge, terminal, calculator 等\n"
+                 "7. 支持的网站快捷方式：b站, 百度, github, 知乎, 淘宝, 京东, 抖音 等\n"
+                 "8. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
                  "示例输出：\n"
                  "快乐|今天的天气真好呀！|今日はいい天気ですね！\n"
-                 "生气|为什么一直打扰我！|なんでずっと邪魔するの！";
+                 "生气|为什么一直打扰我！|なんでずっと邪魔するの！\n"
+                 "开心|好的，我帮你打开B站！|はい、Bilibiliを開きます！|||COMMAND:openurl:b站\n"
+                 "微笑|好的，我帮你打开VS Code！|はい、VS Codeを開きます！|||COMMAND:openapp:vscode\n"
+                 "思考|我来帮你搜索相关信息！|関連情報を検索します！|||COMMAND:search:人工智能最新发展";
     m_ai->setSystemPrompt(sysPrompt);
 
     /* 初始化本轮对话状态 */
