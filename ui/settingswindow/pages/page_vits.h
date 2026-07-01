@@ -3,6 +3,7 @@
 #include <QWidget>
 
 class QNetworkAccessManager;
+class QNetworkReply;
 class QStringListModel;
 
 namespace Ui { class PageVits; }
