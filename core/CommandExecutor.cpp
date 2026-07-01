@@ -4,6 +4,8 @@
 #include "config/JsonConfig.h"
 
 #include <QDesktopServices>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QMessageBox>
 #include <QProcess>
 #include <QRegularExpression>
