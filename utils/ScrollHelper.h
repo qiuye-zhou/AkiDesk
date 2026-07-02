@@ -18,6 +18,6 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
-    QScrollBar *m_scrollBar;
-    int m_stepSize;
+    QScrollBar *m_scrollBar = nullptr;
+    int m_stepSize = 5;
 };

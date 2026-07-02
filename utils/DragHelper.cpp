@@ -13,7 +13,7 @@ DragHelper::DragHelper(QWidget *target)
 /* 拦截鼠标事件，实现无边框窗口的拖拽移动 */
 bool DragHelper::eventFilter(QObject *watched, QEvent *event)
 {
-    if (watched != m_target)
+    if (!m_target || watched != m_target)
         return QObject::eventFilter(watched, event);
 
     switch (event->type())

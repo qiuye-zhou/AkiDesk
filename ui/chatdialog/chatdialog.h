@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QScopedPointer>
 #include <QShowEvent>
 #include <QStringList>
 #include <QWidget>
@@ -60,7 +61,7 @@ private:
     static int findSentenceEnd(const QString &text, int from);
 
     Ui::ChatDialog *ui = nullptr;
-    HistoryPanel *m_historyPanel = nullptr;
+    QScopedPointer<HistoryPanel> m_historyPanel;
 
     AiProvider *m_ai = nullptr;
     VitsEngine *m_vits = nullptr;

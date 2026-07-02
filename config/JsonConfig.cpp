@@ -62,7 +62,6 @@ void JsonConfig::setValue(const QString &key, const QJsonValue &value)
     if (parts.isEmpty())
         return;
 
-    /* 构建完整的嵌套结构 */
     QJsonValue current = value;
     for (int i = parts.size() - 1; i >= 0; --i)
     {
@@ -71,7 +70,6 @@ void JsonConfig::setValue(const QString &key, const QJsonValue &value)
         current = obj;
     }
 
-    /* 合并到根对象 */
     mergeObjects(m_root, current.toObject());
     save();
 }

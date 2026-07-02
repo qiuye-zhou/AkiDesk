@@ -36,7 +36,7 @@ private:
     void restorePosition();
     void tryPlayAnimation(const QString &actionName);
 
-    Ui::CharacterWindow *ui;
+    Ui::CharacterWindow *ui = nullptr;
     QPixmap m_currentPixmap;
     QImage m_scaledImage;
     QPoint m_scaledTopLeft{0, 0};

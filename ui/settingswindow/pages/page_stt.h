@@ -24,5 +24,5 @@ signals:
 private:
     void loadDevices();
 
-    Ui::PageStt *ui;
+    Ui::PageStt *ui = nullptr;
 };

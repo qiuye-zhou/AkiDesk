@@ -18,7 +18,7 @@ protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 
 private:
-    QWidget *m_target;
+    QWidget *m_target = nullptr;
     bool m_dragging = false;
     QPoint m_dragStartPos;
 };

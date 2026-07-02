@@ -37,9 +37,9 @@ private:
     void loadProviderDetail(int index);
     void clearDetail();
 
-    Ui::PageLLM *ui;
-    AiProvider *m_ai;
-    QStringListModel *m_modelListModel;
+    Ui::PageLLM *ui = nullptr;
+    AiProvider *m_ai = nullptr;
+    QStringListModel *m_modelListModel = nullptr;
     QJsonArray m_providers;
     int m_currentIndex = -1;
     bool m_loading = false;

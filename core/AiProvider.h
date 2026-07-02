@@ -57,7 +57,7 @@ private:
     void finalizeStreamReply(QNetworkReply *reply);
     void abortCurrentRequest();
 
-    QNetworkAccessManager *m_network;
+    QNetworkAccessManager *m_network = nullptr;
     QString m_apiKey;
     QString m_apiUrl;
     QString m_model;

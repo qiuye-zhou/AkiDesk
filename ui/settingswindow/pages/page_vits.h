@@ -26,8 +26,8 @@ private slots:
     void onSentenceSplitToggled(bool checked);
 
 private:
-    Ui::PageVits *ui;
-    QNetworkAccessManager *m_network;
-    QStringListModel *m_speakerListModel;
+    Ui::PageVits *ui = nullptr;
+    QNetworkAccessManager *m_network = nullptr;
+    QStringListModel *m_speakerListModel = nullptr;
     QNetworkReply *m_currentReply = nullptr;
 };

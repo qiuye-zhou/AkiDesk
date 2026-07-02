@@ -34,7 +34,7 @@ private:
     void ensureAccessToken(std::function<void(bool)> callback);
     void doRecognize(const QByteArray &pcmData);
 
-    QNetworkAccessManager *m_network;
+    QNetworkAccessManager *m_network = nullptr;
     QString m_apiKey;
     QString m_secretKey;
 

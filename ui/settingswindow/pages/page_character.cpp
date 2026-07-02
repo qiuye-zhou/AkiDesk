@@ -21,16 +21,20 @@
 
 namespace
 {
-/* 跨平台 ZIP 解压（Windows 使用 PowerShell，其他平台使用 Python zipfile） */
 bool extractZip(const QString &zipPath, const QString &targetDir, QString *err)
 {
 #ifdef Q_OS_WIN
-    QString cmd = QString("Expand-Archive -Path '%1' -DestinationPath '%2' -Force")
-                      .arg(zipPath, targetDir);
-    int ret = QProcess::execute("powershell", {"-Command", cmd});
-    if (ret != 0)
+    QProcess ps;
+    ps.start("powershell", {"-NoProfile", "-Command",
+        "Expand-Archive", "-Path", zipPath, "-DestinationPath", targetDir, "-Force"});
+    if (!ps.waitForFinished(30000))
     {
-        if (err) *err = "PowerShell 解压失败";
+        if (err) *err = "PowerShell 解压超时";
+        return false;
+    }
+    if (ps.exitCode() != 0)
+    {
+        if (err) *err = "PowerShell 解压失败: " + ps.readAllStandardError();
         return false;
     }
     return true;
@@ -43,12 +47,18 @@ bool extractZip(const QString &zipPath, const QString &targetDir, QString *err)
         if (err) *err = "未找到 Python 解释器";
         return false;
     }
-    int ret = QProcess::execute(python, {"-c",
+    QProcess py;
+    py.start(python, {"-c",
         "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])",
         zipPath, targetDir});
-    if (ret != 0)
+    if (!py.waitForFinished(30000))
     {
-        if (err) *err = "Python 解压失败";
+        if (err) *err = "Python 解压超时";
+        return false;
+    }
+    if (py.exitCode() != 0)
+    {
+        if (err) *err = "Python 解压失败: " + py.readAllStandardError();
         return false;
     }
     return true;
@@ -85,7 +95,6 @@ PageCharacter::PageCharacter(QWidget *parent)
 
 PageCharacter::~PageCharacter()
 {
-    delete m_pluginManager;
     delete ui;
 }
 

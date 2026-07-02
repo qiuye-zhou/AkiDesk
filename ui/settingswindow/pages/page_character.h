@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QScopedPointer>
 #include <QWidget>
 
 class PluginManager;
@@ -41,7 +42,7 @@ private:
     void refreshModelList();
     void refreshTachieBindings();
 
-    Ui::PageCharacter *ui;
-    PluginManager *m_pluginManager;
+    Ui::PageCharacter *ui = nullptr;
+    QScopedPointer<PluginManager> m_pluginManager;
     bool m_loading = false;
 };

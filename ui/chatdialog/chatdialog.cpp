@@ -190,11 +190,6 @@ ChatDialog::ChatDialog(QWidget *parent)
 ChatDialog::~ChatDialog()
 {
     stopPendingState();
-    if (m_historyPanel)
-    {
-        m_historyPanel->close();
-        delete m_historyPanel;
-    }
     delete ui;
 }
 
@@ -566,8 +561,8 @@ void ChatDialog::on_btnHistory_clicked()
 {
     if (!m_historyPanel)
     {
-        m_historyPanel = new HistoryPanel(this);
-        connect(m_historyPanel, &HistoryPanel::jumpToIndex, this, [this](int idx) {
+        m_historyPanel.reset(new HistoryPanel(this));
+        connect(m_historyPanel.data(), &HistoryPanel::jumpToIndex, this, [this](int idx) {
             if (idx < 0 || idx >= m_context.size())
                 return;
             stopPendingState();
@@ -593,7 +588,7 @@ void ChatDialog::on_btnHistory_clicked()
             if (m_historyVisible)
                 on_btnHistory_clicked();
         });
-        connect(m_historyPanel, &HistoryPanel::deleteIndex, this, [this](int idx) {
+        connect(m_historyPanel.data(), &HistoryPanel::deleteIndex, this, [this](int idx) {
             if (idx < 0 || idx >= m_context.size())
                 return;
             m_context.removeAt(idx);

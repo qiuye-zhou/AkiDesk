@@ -40,9 +40,9 @@ private:
     void startNextSynthesis();
     void startNextPlayback();
 
-    QNetworkAccessManager *m_network;
-    QMediaPlayer *m_player;
-    QAudioOutput *m_audioOutput;
+    QNetworkAccessManager *m_network = nullptr;
+    QMediaPlayer *m_player = nullptr;
+    QAudioOutput *m_audioOutput = nullptr;
 
     QString m_apiUrl;
     QString m_model;

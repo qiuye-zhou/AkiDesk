@@ -14,5 +14,5 @@ public:
     ~PageAbout();
 
 private:
-    Ui::PageAbout *ui;
+    Ui::PageAbout *ui = nullptr;
 };

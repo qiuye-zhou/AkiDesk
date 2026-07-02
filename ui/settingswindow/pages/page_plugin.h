@@ -15,5 +15,5 @@ public:
 
 private:
     void refreshPluginList();
-    Ui::PagePlugin *ui;
+    Ui::PagePlugin *ui = nullptr;
 };

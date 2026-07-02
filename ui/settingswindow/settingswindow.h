@@ -28,8 +28,8 @@ protected:
 private:
     void setupUi();
     QString buildStyleSheet() const;
-    ChatDialog *m_chat;
-    CharacterWindow *m_tachie;
-    QListWidget *m_sidebar;
-    QStackedWidget *m_stack;
+    ChatDialog *m_chat = nullptr;
+    CharacterWindow *m_tachie = nullptr;
+    QListWidget *m_sidebar = nullptr;
+    QStackedWidget *m_stack = nullptr;
 };

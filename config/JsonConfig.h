@@ -2,10 +2,8 @@
 
 #include <QJsonObject>
 #include <QJsonValue>
-#include <QObject>
 #include <QString>
 
-/* 轻量级 JSON 配置读写工具，支持路径式 key（如 "llm/DeepSeek/ApiKey"） */
 class JsonConfig
 {
 public:
