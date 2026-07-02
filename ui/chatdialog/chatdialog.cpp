@@ -132,7 +132,7 @@ ChatDialog::ChatDialog(QWidget *parent)
             CommandExecutor::Command cmd;
             if (m_commandExecutor->parseCommand(commandStr, cmd))
             {
-                m_commandExecutor->executeCommandWithConfirm(cmd);
+                m_commandExecutor->executeCommandWithConfirm(cmd, this);
             }
         }
 

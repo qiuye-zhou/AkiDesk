@@ -10,6 +10,7 @@
 #include <QProcess>
 #include <QRegularExpression>
 #include <QUrl>
+#include <QWidget>
 
 CommandExecutor::CommandExecutor(QObject *parent)
     : QObject(parent)
@@ -158,7 +159,7 @@ bool CommandExecutor::executeCommand(const Command &cmd)
     return false;
 }
 
-bool CommandExecutor::executeCommandWithConfirm(const Command &cmd)
+bool CommandExecutor::executeCommandWithConfirm(const Command &cmd, QWidget *parent)
 {
     QString title;
     QString msg;
@@ -181,7 +182,7 @@ bool CommandExecutor::executeCommandWithConfirm(const Command &cmd)
         return false;
     }
 
-    int ret = QMessageBox::question(nullptr, title, msg,
+    int ret = QMessageBox::question(parent, title, msg,
                                     QMessageBox::Yes | QMessageBox::No,
                                     QMessageBox::No);
     if (ret != QMessageBox::Yes)

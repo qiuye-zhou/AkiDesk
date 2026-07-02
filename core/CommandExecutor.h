@@ -23,7 +23,7 @@ public:
 
     bool executeCommand(const Command &cmd);
 
-    bool executeCommandWithConfirm(const Command &cmd);
+    bool executeCommandWithConfirm(const Command &cmd, QWidget *parent = nullptr);
 
     void loadAppWhitelist();
 
