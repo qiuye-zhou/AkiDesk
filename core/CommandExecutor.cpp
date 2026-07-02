@@ -161,33 +161,7 @@ bool CommandExecutor::executeCommand(const Command &cmd)
 
 bool CommandExecutor::executeCommandWithConfirm(const Command &cmd, QWidget *parent)
 {
-    QString title;
-    QString msg;
-
-    switch (cmd.type)
-    {
-    case Command::Type::OpenUrl:
-        title = "打开网站";
-        msg = QString("确定要打开网站吗？\n\n%1").arg(cmd.value);
-        break;
-    case Command::Type::OpenApp:
-        title = "打开应用";
-        msg = QString("确定要打开应用吗？\n\n%1").arg(cmd.value);
-        break;
-    case Command::Type::Search:
-        title = "网页搜索";
-        msg = QString("确定要搜索吗？\n\n%1").arg(cmd.value);
-        break;
-    default:
-        return false;
-    }
-
-    int ret = QMessageBox::question(parent, title, msg,
-                                    QMessageBox::Yes | QMessageBox::No,
-                                    QMessageBox::No);
-    if (ret != QMessageBox::Yes)
-        return false;
-
+    Q_UNUSED(parent);
     bool success = executeCommand(cmd);
     if (success)
     {
