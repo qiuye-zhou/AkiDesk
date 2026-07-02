@@ -637,7 +637,7 @@ void ChatDialog::on_btnHistory_clicked()
         m_historyPanel->raise();
         m_historyVisible = true;
 
-        auto *opacity = new QGraphicsOpacityEffect(m_historyPanel);
+        auto *opacity = new QGraphicsOpacityEffect(m_historyPanel.data());
         m_historyPanel->setGraphicsEffect(opacity);
         opacity->setOpacity(0.0);
 
@@ -650,12 +650,12 @@ void ChatDialog::on_btnHistory_clicked()
         fadeAnim->setDuration(150);
         fadeAnim->setStartValue(0.0);
         fadeAnim->setEndValue(1.0);
-        auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
+        auto *moveAnim = new QPropertyAnimation(m_historyPanel.data(), "geometry");
         moveAnim->setDuration(150);
         moveAnim->setStartValue(start);
         moveAnim->setEndValue(end);
 
-        auto *group = new QParallelAnimationGroup(m_historyPanel);
+        auto *group = new QParallelAnimationGroup(m_historyPanel.data());
         group->addAnimation(fadeAnim);
         group->addAnimation(moveAnim);
         group->start(QAbstractAnimation::DeleteWhenStopped);
@@ -667,7 +667,7 @@ void ChatDialog::on_btnHistory_clicked()
         auto *opacity = qobject_cast<QGraphicsOpacityEffect *>(m_historyPanel->graphicsEffect());
         if (!opacity)
         {
-            opacity = new QGraphicsOpacityEffect(m_historyPanel);
+            opacity = new QGraphicsOpacityEffect(m_historyPanel.data());
             m_historyPanel->setGraphicsEffect(opacity);
         }
 
@@ -679,15 +679,15 @@ void ChatDialog::on_btnHistory_clicked()
         fadeAnim->setDuration(150);
         fadeAnim->setStartValue(1.0);
         fadeAnim->setEndValue(0.0);
-        auto *moveAnim = new QPropertyAnimation(m_historyPanel, "geometry");
+        auto *moveAnim = new QPropertyAnimation(m_historyPanel.data(), "geometry");
         moveAnim->setDuration(150);
         moveAnim->setStartValue(startR);
         moveAnim->setEndValue(endR);
 
-        auto *group = new QParallelAnimationGroup(m_historyPanel);
+        auto *group = new QParallelAnimationGroup(m_historyPanel.data());
         group->addAnimation(fadeAnim);
         group->addAnimation(moveAnim);
-        connect(group, &QParallelAnimationGroup::finished, m_historyPanel, &QWidget::hide);
+        connect(group, &QParallelAnimationGroup::finished, m_historyPanel.data(), &QWidget::hide);
         group->start(QAbstractAnimation::DeleteWhenStopped);
     }
 }
