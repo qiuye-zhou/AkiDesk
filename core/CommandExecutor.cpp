@@ -4,6 +4,7 @@
 #include "config/JsonConfig.h"
 
 #include <QDesktopServices>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMessageBox>
@@ -210,22 +211,51 @@ bool CommandExecutor::openApp(const QString &appName)
 {
     QString lowerName = appName.toLower();
 
+    QString path;
     if (m_appWhitelist.contains(lowerName))
     {
-        QString path = m_appWhitelist[lowerName];
-        return QProcess::startDetached(path);
+        path = m_appWhitelist[lowerName];
     }
-
-    for (const QString &key : m_appWhitelist.keys())
+    else
     {
-        if (lowerName.length() <= key.length() && key.contains(lowerName))
+        for (const QString &key : m_appWhitelist.keys())
         {
-            QString path = m_appWhitelist[key];
-            return QProcess::startDetached(path);
+            if (lowerName.length() <= key.length() && key.contains(lowerName))
+            {
+                path = m_appWhitelist[key];
+                break;
+            }
         }
     }
 
-    return false;
+    if (path.isEmpty())
+        return false;
+
+    if (path.contains('/') || path.contains('\\'))
+    {
+        return QProcess::startDetached(path, QStringList(), QString());
+    }
+
+    QString exeName = path;
+    if (!exeName.endsWith(".exe", Qt::CaseInsensitive))
+        exeName += ".exe";
+
+    QStringList pathEnv = QString(qgetenv("PATH")).split(';', Qt::SkipEmptyParts);
+    for (const QString &dir : pathEnv)
+    {
+        QString fullPath = dir + "/" + exeName;
+        if (QFile::exists(fullPath))
+        {
+            return QProcess::startDetached(fullPath, QStringList(), QString());
+        }
+        fullPath = dir + "\\" + exeName;
+        if (QFile::exists(fullPath))
+        {
+            return QProcess::startDetached(fullPath, QStringList(), QString());
+        }
+    }
+
+    return QProcess::startDetached(path, QStringList(), QString());
 }
 
 bool CommandExecutor::searchWeb(const QString &query)
