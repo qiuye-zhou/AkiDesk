@@ -12,6 +12,8 @@
 #include <QRegularExpression>
 #include <QUrl>
 #include <QWidget>
+#include <QDirIterator>
+#include <QStandardPaths>
 
 CommandExecutor::CommandExecutor(QObject *parent)
     : QObject(parent)
@@ -211,51 +213,34 @@ bool CommandExecutor::openApp(const QString &appName)
 {
     QString lowerName = appName.toLower();
 
-    QString path;
-    if (m_appWhitelist.contains(lowerName))
+    QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
+    QString programsPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
+    QString commonProgramsPath = QString(qgetenv("PROGRAMDATA")) + "/Microsoft/Windows/Start Menu/Programs";
+
+    QStringList shortcutSearchPaths;
+    shortcutSearchPaths << desktopPath << programsPath << commonProgramsPath;
+
+    for (const QString &searchPath : shortcutSearchPaths)
     {
-        path = m_appWhitelist[lowerName];
-    }
-    else
-    {
-        for (const QString &key : m_appWhitelist.keys())
+        QDir dir(searchPath);
+        if (!dir.exists())
+            continue;
+
+        QDirIterator it(searchPath, QStringList() << "*.lnk", QDir::Files, QDirIterator::Subdirectories);
+        while (it.hasNext())
         {
-            if (lowerName.length() <= key.length() && key.contains(lowerName))
+            QString filePath = it.next();
+            QFileInfo fileInfo(filePath);
+            QString baseName = fileInfo.baseName().toLower();
+
+            if (baseName == lowerName || baseName.contains(lowerName))
             {
-                path = m_appWhitelist[key];
-                break;
+                return QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
             }
         }
     }
 
-    if (path.isEmpty())
-        return false;
-
-    if (path.contains('/') || path.contains('\\'))
-    {
-        return QProcess::startDetached(path, QStringList(), QString());
-    }
-
-    QString exeName = path;
-    if (!exeName.endsWith(".exe", Qt::CaseInsensitive))
-        exeName += ".exe";
-
-    QStringList pathEnv = QString(qgetenv("PATH")).split(';', Qt::SkipEmptyParts);
-    for (const QString &dir : pathEnv)
-    {
-        QString fullPath = dir + "/" + exeName;
-        if (QFile::exists(fullPath))
-        {
-            return QProcess::startDetached(fullPath, QStringList(), QString());
-        }
-        fullPath = dir + "\\" + exeName;
-        if (QFile::exists(fullPath))
-        {
-            return QProcess::startDetached(fullPath, QStringList(), QString());
-        }
-    }
-
-    return QProcess::startDetached(path, QStringList(), QString());
+    return false;
 }
 
 bool CommandExecutor::searchWeb(const QString &query)
