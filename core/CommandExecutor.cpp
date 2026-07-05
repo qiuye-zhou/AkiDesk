@@ -4,16 +4,15 @@
 #include "config/JsonConfig.h"
 
 #include <QDesktopServices>
+#include <QDirIterator>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QMessageBox>
-#include <QProcess>
 #include <QRegularExpression>
-#include <QUrl>
-#include <QWidget>
-#include <QDirIterator>
 #include <QStandardPaths>
+#include <QUrl>
+#include <algorithm>
 
 CommandExecutor::CommandExecutor(QObject *parent)
     : QObject(parent)
@@ -23,54 +22,9 @@ CommandExecutor::CommandExecutor(QObject *parent)
 
 void CommandExecutor::loadAppWhitelist()
 {
-    m_appWhitelist.clear();
     m_urlShortcuts.clear();
 
     JsonConfig cfg(GlobalConfigPath);
-
-    QJsonArray apps = cfg.value("commands/apps").toArray();
-    for (const QJsonValue &v : apps)
-    {
-        QJsonObject obj = v.toObject();
-        QString name = obj.value("name").toString().trimmed().toLower();
-        QString path = obj.value("path").toString().trimmed();
-        if (!name.isEmpty() && !path.isEmpty())
-        {
-            m_appWhitelist[name] = path;
-        }
-    }
-
-    if (m_appWhitelist.isEmpty())
-    {
-#ifdef Q_OS_WIN
-        m_appWhitelist["vscode"] = "code";
-        m_appWhitelist["vs code"] = "code";
-        m_appWhitelist["visual studio code"] = "code";
-        m_appWhitelist["notepad"] = "notepad";
-        m_appWhitelist["计算器"] = "calc";
-        m_appWhitelist["calculator"] = "calc";
-        m_appWhitelist["画图"] = "mspaint";
-        m_appWhitelist["paint"] = "mspaint";
-        m_appWhitelist["资源管理器"] = "explorer";
-        m_appWhitelist["explorer"] = "explorer";
-        m_appWhitelist["终端"] = "cmd";
-        m_appWhitelist["terminal"] = "cmd";
-        m_appWhitelist["powershell"] = "powershell";
-        m_appWhitelist["chrome"] = "chrome";
-        m_appWhitelist["google chrome"] = "chrome";
-        m_appWhitelist["edge"] = "msedge";
-        m_appWhitelist["steam"] = "steam";
-        m_appWhitelist["微信"] = "wechat";
-        m_appWhitelist["qq"] = "qq";
-#else
-        m_appWhitelist["vscode"] = "code";
-        m_appWhitelist["vs code"] = "code";
-        m_appWhitelist["notepad"] = "gedit";
-        m_appWhitelist["terminal"] = "gnome-terminal";
-        m_appWhitelist["chrome"] = "google-chrome";
-        m_appWhitelist["firefox"] = "firefox";
-#endif
-    }
 
     QJsonArray urls = cfg.value("commands/urls").toArray();
     for (const QJsonValue &v : urls)
@@ -164,7 +118,6 @@ bool CommandExecutor::executeCommand(const Command &cmd)
 
 bool CommandExecutor::executeCommandWithConfirm(const Command &cmd, QWidget *parent)
 {
-    Q_UNUSED(parent);
     bool success = executeCommand(cmd);
     if (success)
     {
@@ -173,6 +126,23 @@ bool CommandExecutor::executeCommandWithConfirm(const Command &cmd, QWidget *par
     else
     {
         emit commandExecuted(QString("执行命令失败：%1").arg(cmd.value));
+        QString msg;
+        if (cmd.type == Command::Type::OpenApp)
+            msg = QString("无法打开应用 \"%1\"，请检查桌面上或开始菜单中是否有该应用的快捷方式。").arg(cmd.value);
+        else if (cmd.type == Command::Type::OpenUrl)
+            msg = QString("无法打开网址 \"%1\"。").arg(cmd.value);
+        else if (cmd.type == Command::Type::Search)
+            msg = QString("无法执行搜索 \"%1\"。").arg(cmd.value);
+        else
+            msg = QString("执行命令失败：%1").arg(cmd.value);
+
+        QMessageBox msgBox;
+        msgBox.setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);
+        msgBox.setIcon(QMessageBox::Warning);
+        msgBox.setWindowTitle("执行失败");
+        msgBox.setText(msg);
+        msgBox.setStyleSheet("");
+        msgBox.exec();
     }
     return success;
 }
@@ -188,7 +158,7 @@ bool CommandExecutor::openUrl(const QString &urlStr)
     }
 
     QString finalUrlStr = input;
-    if (!finalUrlStr.startsWith("http://", Qt::CaseInsensitive) && 
+    if (!finalUrlStr.startsWith("http://", Qt::CaseInsensitive) &&
         !finalUrlStr.startsWith("https://", Qt::CaseInsensitive))
     {
         finalUrlStr = "https://" + finalUrlStr;
@@ -211,8 +181,6 @@ bool CommandExecutor::openUrl(const QString &urlStr)
 
 bool CommandExecutor::openApp(const QString &appName)
 {
-    QString lowerName = appName.toLower();
-
     QString desktopPath = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
     QString programsPath = QStandardPaths::writableLocation(QStandardPaths::ApplicationsLocation);
     QString commonProgramsPath = QString(qgetenv("PROGRAMDATA")) + "/Microsoft/Windows/Start Menu/Programs";
@@ -220,12 +188,16 @@ bool CommandExecutor::openApp(const QString &appName)
     QStringList shortcutSearchPaths;
     shortcutSearchPaths << desktopPath << programsPath << commonProgramsPath;
 
+    struct MatchResult
+    {
+        QString path;
+        QString name;
+        int score;
+    };
+    QList<MatchResult> matches;
+
     for (const QString &searchPath : shortcutSearchPaths)
     {
-        QDir dir(searchPath);
-        if (!dir.exists())
-            continue;
-
         QDirIterator it(searchPath, QStringList() << "*.lnk", QDir::Files, QDirIterator::Subdirectories);
         while (it.hasNext())
         {
@@ -233,14 +205,53 @@ bool CommandExecutor::openApp(const QString &appName)
             QFileInfo fileInfo(filePath);
             QString baseName = fileInfo.baseName().toLower();
 
-            if (baseName == lowerName || baseName.contains(lowerName))
+            if (baseName.contains("卸载") || baseName.contains("uninstall") ||
+                baseName.contains("remove") || baseName.contains("删除"))
             {
-                return QDesktopServices::openUrl(QUrl::fromLocalFile(filePath));
+                continue;
+            }
+
+            int score = 0;
+            if (baseName == appName)
+            {
+                score = 3;
+            }
+            else if (baseName.contains(appName))
+            {
+                score = 2;
+            }
+            else
+            {
+                bool allCharsFound = true;
+                for (const QChar &c : appName)
+                {
+                    if (!baseName.contains(c))
+                    {
+                        allCharsFound = false;
+                        break;
+                    }
+                }
+                if (allCharsFound)
+                {
+                    score = 1;
+                }
+            }
+
+            if (score > 0)
+            {
+                matches.append({filePath, baseName, score});
             }
         }
     }
 
-    return false;
+    if (matches.isEmpty())
+        return false;
+
+    std::sort(matches.begin(), matches.end(), [](const MatchResult &a, const MatchResult &b) {
+        return a.score > b.score;
+    });
+
+    return QDesktopServices::openUrl(QUrl::fromLocalFile(matches.first().path));
 }
 
 bool CommandExecutor::searchWeb(const QString &query)

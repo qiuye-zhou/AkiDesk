@@ -37,6 +37,5 @@ private:
 
     bool searchWeb(const QString &query);
 
-    QMap<QString, QString> m_appWhitelist;
     QMap<QString, QString> m_urlShortcuts;
 };
