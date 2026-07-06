@@ -1,6 +1,6 @@
 # AkiDesk
 
-一款基于 Qt6 开发的 AI 桌宠应用，支持实时聊天、语音交互和立绘动画展示。
+一款基于 Qt6 开发的 AI 桌宠应用，支持实时聊天、语音交互、立绘动画展示和对话控制打开应用功能。
 
 ## 功能特性
 
@@ -11,6 +11,7 @@
 - **语音合成** - 集成 VITS 语音合成引擎，支持按句合成和队列播放
 - **语音识别** - 集成百度语音识别 API，支持实时语音输入
 - **动画系统** - 支持插件化动画扩展，可自定义动画效果
+- **对话控制** - AI 可控制打开网站和应用程序（基于白名单安全机制）
 - **丰富设置** - 提供角色、LLM、VITS、STT 等多项配置
 
 ### 特色亮点
@@ -45,7 +46,8 @@ AkiDesk/
 ├── core/                      # 核心功能模块
 │   ├── AiProvider.cpp         # AI 对话接口（OpenAI 兼容）
 │   ├── VitsEngine.cpp         # VITS 语音合成引擎
-│   └── SpeechRecognizer.cpp   # 百度语音识别
+│   ├── SpeechRecognizer.cpp   # 百度语音识别
+│   └── CommandExecutor.cpp    # 命令执行器（网站/应用控制）
 ├── ui/                        # 用户界面模块
 │   ├── characterwindow/       # 立绘窗口（透明、可拖拽）
 │   ├── chatdialog/            # 聊天对话框
@@ -253,3 +255,7 @@ A: 在 `Plugin/Anime/` 目录下创建新的 JSON 文件，按照动画插件格
 ## 许可证
 
 本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
+
+## 贡献
+
+欢迎提交 Issue 和 Pull Request！
