@@ -244,14 +244,34 @@ bool CommandExecutor::openApp(const QString &appName)
         }
     }
 
-    if (matches.isEmpty())
-        return false;
+    if (!matches.isEmpty())
+    {
+        std::sort(matches.begin(), matches.end(), [](const MatchResult &a, const MatchResult &b) {
+            return a.score > b.score;
+        });
+        return QDesktopServices::openUrl(QUrl::fromLocalFile(matches.first().path));
+    }
 
-    std::sort(matches.begin(), matches.end(), [](const MatchResult &a, const MatchResult &b) {
-        return a.score > b.score;
-    });
+    QString exeName = appName;
+    if (!exeName.endsWith(".exe", Qt::CaseInsensitive))
+        exeName += ".exe";
 
-    return QDesktopServices::openUrl(QUrl::fromLocalFile(matches.first().path));
+    QStringList pathEnv = QString(qgetenv("PATH")).split(';', Qt::SkipEmptyParts);
+    for (const QString &dir : pathEnv)
+    {
+        QString fullPath = dir + "/" + exeName;
+        if (QFile::exists(fullPath))
+        {
+            return QProcess::startDetached(fullPath, QStringList(), QString());
+        }
+        fullPath = dir + "\\" + exeName;
+        if (QFile::exists(fullPath))
+        {
+            return QProcess::startDetached(fullPath, QStringList(), QString());
+        }
+    }
+
+    return QProcess::startDetached(appName, QStringList(), QString());
 }
 
 bool CommandExecutor::searchWeb(const QString &query)

@@ -325,7 +325,6 @@ void ChatDialog::stopPendingState()
     m_lastInput.clear();
     m_streamRaw.clear();
     m_streamChinese.clear();
-    m_vitsEnabled = false;
     m_vitsCursor = 0;
 
     if (m_ai)
@@ -355,18 +354,35 @@ void ChatDialog::stopPendingState()
     }
 }
 
-/* 按下回车发送消息 */
 void ChatDialog::keyPressEvent(QKeyEvent *event)
 {
     if (!m_pressedKeys.contains(event->key()))
         m_pressedKeys.append(event->key());
+
+    if (event->key() == Qt::Key_Escape)
+    {
+        hide();
+        event->accept();
+        QWidget::keyPressEvent(event);
+        return;
+    }
+
+    if (event->key() == Qt::Key_F1)
+    {
+        emit requestSetTachie("default");
+        event->accept();
+        QWidget::keyPressEvent(event);
+        return;
+    }
+
     QWidget::keyPressEvent(event);
 }
 
 void ChatDialog::keyReleaseEvent(QKeyEvent *event)
 {
     m_pressedKeys.removeAll(event->key());
-    if (event->key() == Qt::Key_Return && !m_pressedKeys.contains(Qt::Key_Shift)
+
+    if (!m_pressedKeys.contains(Qt::Key_Shift) && event->key() == Qt::Key_Return
         && ui->textEdit->isEnabled())
     {
         QTextCursor cursor = ui->textEdit->textCursor();
@@ -381,6 +397,7 @@ void ChatDialog::keyReleaseEvent(QKeyEvent *event)
         }
         sendMessage(userInput);
     }
+
     QWidget::keyReleaseEvent(event);
 }
 
@@ -425,8 +442,6 @@ void ChatDialog::sendMessage(const QString &text)
     m_streamRaw.clear();
     m_streamChinese.clear();
     m_vitsCursor = 0;
-    if (m_vits)
-        m_vits->stopAll();
 
     m_ai->chat(buildMessageWithContext(text));
     ui->textEdit->setText("……");
