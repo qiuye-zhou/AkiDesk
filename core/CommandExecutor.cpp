@@ -252,26 +252,7 @@ bool CommandExecutor::openApp(const QString &appName)
         return QDesktopServices::openUrl(QUrl::fromLocalFile(matches.first().path));
     }
 
-    QString exeName = appName;
-    if (!exeName.endsWith(".exe", Qt::CaseInsensitive))
-        exeName += ".exe";
-
-    QStringList pathEnv = QString(qgetenv("PATH")).split(';', Qt::SkipEmptyParts);
-    for (const QString &dir : pathEnv)
-    {
-        QString fullPath = dir + "/" + exeName;
-        if (QFile::exists(fullPath))
-        {
-            return QProcess::startDetached(fullPath, QStringList(), QString());
-        }
-        fullPath = dir + "\\" + exeName;
-        if (QFile::exists(fullPath))
-        {
-            return QProcess::startDetached(fullPath, QStringList(), QString());
-        }
-    }
-
-    return QProcess::startDetached(appName, QStringList(), QString());
+    return false;
 }
 
 bool CommandExecutor::searchWeb(const QString &query)
