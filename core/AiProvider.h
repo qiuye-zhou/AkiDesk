@@ -29,9 +29,6 @@ public:
     void setStreamEnabled(bool enabled);
     void setSystemPrompt(const QString &prompt);
 
-    QString currentModel() const { return m_model; }
-    QString currentApiUrl() const { return m_apiUrl; }
-
     /* 拉取可用模型列表 */
     void fetchModels();
 
