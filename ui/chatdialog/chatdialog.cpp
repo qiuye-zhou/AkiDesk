@@ -16,16 +16,13 @@
 #include <QBuffer>
 #include <QCloseEvent>
 #include <QDir>
-#include <QFileInfo>
 #include <QGraphicsOpacityEffect>
 #include <QJsonArray>
 #include <QMediaDevices>
-#include <QMouseEvent>
 #include <QPainter>
 #include <QPainterPath>
 #include <QParallelAnimationGroup>
 #include <QPropertyAnimation>
-#include <QSettings>
 #include <QTextCursor>
 #include <QTimer>
 
@@ -745,7 +742,6 @@ void ChatDialog::reloadAiConfig()
     {
         m_vits->setApiUrl(globalCfg.value("vits/ApiUrl").toString());
         QString mas = charCfg.value("vitsMasSelect").toString();
-        m_vits->setModel(mas.section(" - ", 0, 0).trimmed());
         m_vits->setSpeaker(mas.section(" - ", 1, 1).trimmed());
     }
 

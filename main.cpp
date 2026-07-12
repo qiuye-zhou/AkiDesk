@@ -11,7 +11,6 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMenu>
-#include <QResource>
 #include <QStandardPaths>
 #include <QSystemTrayIcon>
 

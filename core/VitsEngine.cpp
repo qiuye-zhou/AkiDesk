@@ -46,7 +46,6 @@ VitsEngine::~VitsEngine()
 }
 
 void VitsEngine::setApiUrl(const QString &url) { m_apiUrl = url; }
-void VitsEngine::setModel(const QString &model) { m_model = model; }
 void VitsEngine::setSpeaker(const QString &speaker) { m_speaker = speaker; }
 
 void VitsEngine::enqueueAndPlay(const QString &text)

@@ -25,7 +25,7 @@ public:
 
     bool executeCommandWithConfirm(const Command &cmd, QWidget *parent = nullptr);
 
-    void loadAppWhitelist();
+    void loadUrlShortcuts();
 
 signals:
     void commandExecuted(const QString &result);

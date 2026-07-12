@@ -21,7 +21,6 @@ public:
 
     /* 设置合成参数 */
     void setApiUrl(const QString &url);
-    void setModel(const QString &model);
     void setSpeaker(const QString &speaker);
 
     /* 将文本追加到待合成队列，自动按队列顺序合成和播放 */
@@ -45,7 +44,6 @@ private:
     QAudioOutput *m_audioOutput = nullptr;
 
     QString m_apiUrl;
-    QString m_model;
     QString m_speaker;
 
     QStringList m_pendingTexts;

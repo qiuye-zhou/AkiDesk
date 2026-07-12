@@ -17,10 +17,10 @@
 CommandExecutor::CommandExecutor(QObject *parent)
     : QObject(parent)
 {
-    loadAppWhitelist();
+    loadUrlShortcuts();
 }
 
-void CommandExecutor::loadAppWhitelist()
+void CommandExecutor::loadUrlShortcuts()
 {
     m_urlShortcuts.clear();
 
