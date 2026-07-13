@@ -2,6 +2,8 @@
 
 #include <QByteArray>
 #include <QHash>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QObject>
 #include <QString>
 #include <QStringList>
@@ -32,8 +34,11 @@ public:
     /* 拉取可用模型列表 */
     void fetchModels();
 
-    /* 发起对话请求 */
+    /* 发起对话请求（单轮，向后兼容） */
     void chat(const QString &userMessage);
+
+    /* 发起对话请求（多轮，结构化消息数组） */
+    void chat(const QJsonArray &messages);
 
     /* 取消所有正在进行的请求 */
     void cancelAll();

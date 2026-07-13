@@ -104,15 +104,9 @@ void AiProvider::abortCurrentRequest()
     m_streamReplies.clear();
 }
 
-/* 发起对话请求 */
+/* 发起对话请求（单轮，向后兼容） */
 void AiProvider::chat(const QString &userMessage)
 {
-    abortCurrentRequest();
-
-    QJsonObject body;
-    body["model"] = m_model;
-    body["stream"] = m_streamEnabled;
-
     QJsonArray messages;
     if (!m_systemPrompt.isEmpty())
     {
@@ -125,7 +119,29 @@ void AiProvider::chat(const QString &userMessage)
     userMsg["role"] = "user";
     userMsg["content"] = userMessage;
     messages.append(userMsg);
-    body["messages"] = messages;
+    chat(messages);
+}
+
+/* 发起对话请求（多轮，结构化消息数组） */
+void AiProvider::chat(const QJsonArray &messages)
+{
+    abortCurrentRequest();
+
+    QJsonObject body;
+    body["model"] = m_model;
+    body["stream"] = m_streamEnabled;
+
+    QJsonArray fullMessages;
+    if (!m_systemPrompt.isEmpty())
+    {
+        QJsonObject sysMsg;
+        sysMsg["role"] = "system";
+        sysMsg["content"] = m_systemPrompt;
+        fullMessages.append(sysMsg);
+    }
+    for (const QJsonValue &v : messages)
+        fullMessages.append(v);
+    body["messages"] = fullMessages;
 
     QNetworkRequest request(QUrl(m_apiUrl + "/chat/completions"));
     request.setHeader(QNetworkRequest::ContentTypeHeader, "application/json");
@@ -143,7 +159,7 @@ void AiProvider::chat(const QString &userMessage)
             return;
         if (replyPtr->isRunning())
         {
-            emit self->errorOccurred("请求超时");
+            replyPtr->setProperty("timeout", true);
             replyPtr->abort();
         }
     });
@@ -174,7 +190,14 @@ void AiProvider::chat(const QString &userMessage)
                         self->m_activeReply = nullptr;
                     if (reply->error() != QNetworkReply::NoError)
                     {
-                        emit errorOccurred(reply->errorString());
+                        if (reply->property("timeout").toBool())
+                        {
+                            emit errorOccurred("请求超时，请检查网络连接");
+                        }
+                        else
+                        {
+                            emit errorOccurred(reply->errorString());
+                        }
                     }
                     else
                     {
@@ -184,6 +207,10 @@ void AiProvider::chat(const QString &userMessage)
                         {
                             QString content = choices[0].toObject()["message"].toObject()["content"].toString();
                             emit replyReceived(content);
+                        }
+                        else
+                        {
+                            emit replyReceived(QString());
                         }
                     }
                     m_streamBuffers.remove(reply);
@@ -248,7 +275,14 @@ void AiProvider::finalizeStreamReply(QNetworkReply *reply)
 {
     if (reply->error() != QNetworkReply::NoError && reply->error() != QNetworkReply::RemoteHostClosedError)
     {
-        emit errorOccurred(reply->errorString());
+        if (reply->property("timeout").toBool())
+        {
+            emit errorOccurred("请求超时，请检查网络连接");
+        }
+        else
+        {
+            emit errorOccurred(reply->errorString());
+        }
     }
     else
     {

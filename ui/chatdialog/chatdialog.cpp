@@ -18,6 +18,8 @@
 #include <QDir>
 #include <QGraphicsOpacityEffect>
 #include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QMediaDevices>
 #include <QPainter>
 #include <QPainterPath>
@@ -67,44 +69,80 @@ ChatDialog::ChatDialog(QWidget *parent)
     connect(m_ai, &AiProvider::replyChunkReceived, this, [this](const QString &chunk) {
         m_streamRaw += chunk;
 
-        /* 解析格式：心情|中文|日语，按 "|" 分隔 */
+        QString displayText;
         const int sep1 = m_streamRaw.indexOf('|');
-        if (sep1 < 0)
-            return;
-        const int sep2 = m_streamRaw.indexOf('|', sep1 + 1);
-        const int chineseEnd = (sep2 < 0) ? m_streamRaw.size() : sep2;
-        const QString chinese = m_streamRaw.mid(sep1 + 1, chineseEnd - sep1 - 1);
-
-        /* 更新显示 */
-        if (!chinese.isEmpty() && chinese != m_streamChinese)
+        if (sep1 >= 0)
         {
-            m_streamChinese = chinese;
-            ui->textEdit->setText(m_streamChinese);
+            const int sep2 = m_streamRaw.indexOf('|', sep1 + 1);
+            const int chineseEnd = (sep2 < 0) ? m_streamRaw.size() : sep2;
+            displayText = m_streamRaw.mid(sep1 + 1, chineseEnd - sep1 - 1);
+
+            if (m_vitsEnabled && m_vitsSentenceSplit && sep2 >= 0)
+            {
+                const QString japanese = m_streamRaw.mid(sep2 + 1);
+                int end = findSentenceEnd(japanese, m_vitsCursor);
+                while (end >= 0)
+                {
+                    QString sentence = japanese.mid(m_vitsCursor, end - m_vitsCursor + 1).trimmed();
+                    m_vitsCursor = end + 1;
+                    if (!sentence.isEmpty())
+                        m_vits->enqueueAndPlay(sentence);
+                    end = findSentenceEnd(japanese, m_vitsCursor);
+                }
+            }
+        }
+        else
+        {
+            displayText = m_streamRaw;
         }
 
-        /* 检测到日语部分后，按句子切分触发语音合成 */
-        if (m_vitsEnabled && m_vitsSentenceSplit && sep2 >= 0)
+        if (!displayText.isEmpty() && displayText != m_streamChinese)
         {
-            const QString japanese = m_streamRaw.mid(sep2 + 1);
-            int end = findSentenceEnd(japanese, m_vitsCursor);
-            while (end >= 0)
-            {
-                QString sentence = japanese.mid(m_vitsCursor, end - m_vitsCursor + 1).trimmed();
-                m_vitsCursor = end + 1;
-                if (!sentence.isEmpty())
-                    m_vits->enqueueAndPlay(sentence);
-                end = findSentenceEnd(japanese, m_vitsCursor);
-            }
+            m_streamChinese = displayText;
+            ui->textEdit->setText(m_streamChinese);
         }
     });
 
     /* 完整回复到达：最终解析、补漏语音、更新立绘、保存历史、执行命令 */
     connect(m_ai, &AiProvider::replyReceived, this, [this](const QString &reply) {
-        const QString full = m_streamRaw.isEmpty() ? reply : m_streamRaw;
-        const QString mood = full.section('|', 0, 0).trimmed();
-        const QString chinese = full.section('|', 1, 1).trimmed();
-        const QString japanese = full.section('|', 2, 2).trimmed();
-        const QString commandStr = full.section('|', 5, 5).trimmed();
+        QString full = m_streamRaw.isEmpty() ? reply : m_streamRaw;
+
+        if (full.isEmpty())
+        {
+            ui->textEdit->setText("抱歉，我没有收到回复，请重试。");
+            ui->btnNext->show();
+            m_lastInput.clear();
+            m_streamRaw.clear();
+            m_streamChinese.clear();
+            m_vitsCursor = 0;
+            return;
+        }
+
+        QString mood, chinese, japanese, commandStr;
+
+        if (full.contains('|'))
+        {
+            mood = full.section('|', 0, 0).trimmed();
+            chinese = full.section('|', 1, 1).trimmed();
+            japanese = full.section('|', 2, 2).trimmed();
+            commandStr = full.section('|', 5, 5).trimmed();
+        }
+        else
+        {
+            chinese = full.trimmed();
+            mood = m_cachedTachieNames.isEmpty() ? "" : m_cachedTachieNames.first();
+        }
+
+        if (chinese.isEmpty())
+        {
+            ui->textEdit->setText("抱歉，我无法理解，请换一种方式表达。");
+            ui->btnNext->show();
+            m_lastInput.clear();
+            m_streamRaw.clear();
+            m_streamChinese.clear();
+            m_vitsCursor = 0;
+            return;
+        }
 
         ui->textEdit->setText(chinese);
         ui->btnNext->show();
@@ -136,10 +174,10 @@ ChatDialog::ChatDialog(QWidget *parent)
         /* 保存对话历史 */
         if (!m_lastInput.isEmpty())
         {
-            appendHistory(QStringLiteral("用户：") + m_lastInput);
+            appendHistory("user", m_lastInput);
             m_lastInput.clear();
         }
-        appendHistory(QStringLiteral("角色：") + chinese);
+        appendHistory("assistant", chinese);
 
         m_streamRaw.clear();
         m_streamChinese.clear();
@@ -273,14 +311,37 @@ void ChatDialog::removeBorder()
 /* 从本地文件加载对话上下文历史 */
 void ChatDialog::loadContext()
 {
-    m_context.clear();
+    m_context = QJsonArray();
     const QString path = CurrentCharacterContextPath();
     if (path.isEmpty())
         return;
     JsonConfig cfg(path);
     const QJsonArray arr = cfg.value("history", QJsonArray()).toArray();
     for (const QJsonValue &v : arr)
-        m_context.append(v.toString());
+    {
+        if (v.isObject())
+        {
+            m_context.append(v.toObject());
+        }
+        else
+        {
+            QString line = v.toString();
+            if (line.startsWith("用户："))
+            {
+                QJsonObject obj;
+                obj["role"] = "user";
+                obj["content"] = line.mid(3);
+                m_context.append(obj);
+            }
+            else if (line.startsWith("角色："))
+            {
+                QJsonObject obj;
+                obj["role"] = "assistant";
+                obj["content"] = line.mid(3);
+                m_context.append(obj);
+            }
+        }
+    }
 }
 
 /* 保存对话上下文到本地文件 */
@@ -289,31 +350,76 @@ void ChatDialog::saveContext() const
     const QString path = CurrentCharacterContextPath();
     if (path.isEmpty())
         return;
-    QJsonArray arr;
-    for (const QString &line : m_context)
-        arr.append(line);
     JsonConfig cfg(path);
-    cfg.setValue("history", arr);
+    cfg.setValue("history", m_context);
 }
 
-void ChatDialog::appendHistory(const QString &line)
+void ChatDialog::appendHistory(const QString &role, const QString &content)
 {
-    if (!line.isEmpty())
+    if (content.isEmpty())
+        return;
+    QJsonObject obj;
+    obj["role"] = role;
+    obj["content"] = content;
+    m_context.append(obj);
+    while (m_context.size() > 40)
+        m_context.removeFirst();
+    saveContext();
+}
+
+/* 构建多轮对话消息数组（token优化版本） */
+QJsonArray ChatDialog::buildMessagesArray(const QString &input) const
+{
+    QJsonArray messages;
+
+    const int maxHistoryTurns = 6;
+    const int maxTotalTokens = 3000;
+    const int systemPromptTokens = 500;
+
+    int usedTokens = systemPromptTokens + estimateTokenCount(input);
+
+    QJsonArray recentHistory;
+    for (int i = m_context.size() - 1; i >= 0; --i)
     {
-        m_context.append(line);
-        while (m_context.size() > 40)
-            m_context.removeFirst();
-        saveContext();
+        QJsonObject msg = m_context[i].toObject();
+        int msgTokens = estimateTokenCount(msg.value("content").toString());
+
+        if (usedTokens + msgTokens <= maxTotalTokens &&
+            recentHistory.size() < maxHistoryTurns * 2)
+        {
+            recentHistory.prepend(msg);
+            usedTokens += msgTokens;
+        }
+        else
+        {
+            break;
+        }
     }
+
+    for (const QJsonValue &v : recentHistory)
+        messages.append(v);
+
+    QJsonObject userMsg;
+    userMsg["role"] = "user";
+    userMsg["content"] = input;
+    messages.append(userMsg);
+
+    return messages;
 }
 
-/* 构建带上下文的用户消息 */
-QString ChatDialog::buildMessageWithContext(const QString &input) const
+/* 估算文本的token数量 */
+int ChatDialog::estimateTokenCount(const QString &text)
 {
-    if (m_context.isEmpty())
-        return input;
-    return "以下是你和用户最近的对话，请延续上下文并保持人设一致：\n" +
-           m_context.join("\n") + "\n\n用户当前输入：" + input;
+    int tokens = 0;
+    for (const QChar &c : text)
+    {
+        if (c.unicode() < 128)
+            tokens += 1;
+        else
+            tokens += 2;
+    }
+    tokens = qMax(1, tokens / 2);
+    return tokens;
 }
 
 /* 清理残留的流式和播放状态 */
@@ -411,23 +517,11 @@ void ChatDialog::sendMessage(const QString &text)
     QString sysPrompt;
     if (!m_cachedCharPrompt.isEmpty())
         sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
-    sysPrompt += "你是一个桌宠 AI，可以帮助用户控制电脑。输出内容必须严格按照以下格式：\n"
-                 "心情|中文|日语|||COMMAND:type:value\n\n"
-                 "要求：\n"
-                 "1. 心情必须从以下列表中选择：" + m_cachedTachieNames.join(", ") + "\n"
-                 "2. 中文是桌宠此刻想表达的内容\n"
-                 "3. 日语是中文内容的对应翻译\n"
-                 "4. COMMAND 部分是可选的，用于执行电脑控制命令\n"
-                 "5. COMMAND 格式：COMMAND:openapp:应用名 或 COMMAND:openurl:网址 或 COMMAND:search:搜索内容\n"
-                 "6. 支持的应用：vscode, notepad, chrome, edge, terminal, calculator 等\n"
-                 "7. 支持的网站快捷方式：b站, 百度, github, 知乎, 淘宝, 京东, 抖音 等\n"
-                 "8. 输出中不能有多余内容或解释，严格用\"|\"分隔\n\n"
-                 "示例输出：\n"
-                 "快乐|今天的天气真好呀！|今日はいい天気ですね！\n"
-                 "生气|为什么一直打扰我！|なんでずっと邪魔するの！\n"
-                 "开心|好的，我帮你打开B站！|はい、Bilibiliを開きます！|||COMMAND:openurl:b站\n"
-                 "微笑|好的，我帮你打开VS Code！|はい、VS Codeを開きます！|||COMMAND:openapp:vscode\n"
-                 "思考|我来帮你搜索相关信息！|関連情報を検索します！|||COMMAND:search:人工智能最新发展";
+    sysPrompt += "你是一个桌宠AI，可以帮助用户控制电脑。\n";
+    sysPrompt += "输出格式必须严格按照：心情|中文|日语|||COMMAND:type:value\n";
+    sysPrompt += "心情从以下选择：" + m_cachedTachieNames.join(", ") + "\n";
+    sysPrompt += "示例：开心|好的，我帮你打开网易云音乐！|はい、NetEase Cloud Musicを開きます！|||COMMAND:openapp:网易云音乐\n";
+    sysPrompt += "COMMAND可选，支持：openapp(应用名)、openurl(网址/快捷名)、search(搜索内容)。";
     m_ai->setSystemPrompt(sysPrompt);
 
     /* 初始化本轮对话状态 */
@@ -440,7 +534,7 @@ void ChatDialog::sendMessage(const QString &text)
     m_streamChinese.clear();
     m_vitsCursor = 0;
 
-    m_ai->chat(buildMessageWithContext(text));
+    m_ai->chat(buildMessagesArray(text));
     ui->textEdit->setText("……");
 }
 
@@ -578,23 +672,28 @@ void ChatDialog::on_btnHistory_clicked()
             if (idx < 0 || idx >= m_context.size())
                 return;
             stopPendingState();
-            m_context = m_context.mid(0, idx + 1);
+            QJsonArray newContext;
+            for (int i = 0; i <= idx && i < m_context.size(); ++i)
+                newContext.append(m_context[i]);
+            m_context = newContext;
             saveContext();
 
-            const QString line = m_context.at(idx);
-            if (line.startsWith("用户："))
+            QJsonObject obj = m_context.at(idx).toObject();
+            QString role = obj.value("role").toString();
+            QString content = obj.value("content").toString();
+            if (role == "user")
             {
                 ui->labelName->setText("你");
                 ui->textEdit->setEnabled(true);
-                ui->textEdit->setText(line.mid(3));
+                ui->textEdit->setText(content);
                 ui->btnNext->hide();
             }
-            else if (line.startsWith("角色："))
+            else if (role == "assistant")
             {
                 const QString cn = CurrentCharacterName();
                 ui->labelName->setText(cn.isEmpty() ? QStringLiteral("角色") : cn);
                 ui->textEdit->setEnabled(false);
-                ui->textEdit->setText(line.mid(3));
+                ui->textEdit->setText(content);
                 ui->btnNext->show();
             }
             if (m_historyVisible)
@@ -608,19 +707,21 @@ void ChatDialog::on_btnHistory_clicked()
             if (m_historyVisible)
             {
                 m_historyPanel->clear();
-                for (int i = 0; i < m_context.size(); ++i)
+            for (int i = 0; i < m_context.size(); ++i)
+            {
+                QJsonObject obj = m_context[i].toObject();
+                QString role = obj.value("role").toString();
+                QString content = obj.value("content").toString();
+                if (role == "user")
+                    m_historyPanel->addItem(i, "你", content);
+                else if (role == "assistant")
                 {
-                    const QString &line = m_context[i];
-                    if (line.startsWith("用户："))
-                        m_historyPanel->addItem(i, "你", line.mid(3));
-                    else if (line.startsWith("角色："))
-                    {
-                        const QString cn = CurrentCharacterName();
-                        m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, line.mid(3));
-                    }
-                    else
-                        m_historyPanel->addItem(i, "记录", line);
+                    const QString cn = CurrentCharacterName();
+                    m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, content);
                 }
+                else
+                    m_historyPanel->addItem(i, "记录", content);
+            }
             }
         });
     }
@@ -628,16 +729,18 @@ void ChatDialog::on_btnHistory_clicked()
     m_historyPanel->clear();
     for (int i = 0; i < m_context.size(); ++i)
     {
-        const QString &line = m_context[i];
-        if (line.startsWith("用户："))
-            m_historyPanel->addItem(i, "你", line.mid(3));
-        else if (line.startsWith("角色："))
+        QJsonObject obj = m_context[i].toObject();
+        QString role = obj.value("role").toString();
+        QString content = obj.value("content").toString();
+        if (role == "user")
+            m_historyPanel->addItem(i, "你", content);
+        else if (role == "assistant")
         {
             const QString cn = CurrentCharacterName();
-            m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, line.mid(3));
+            m_historyPanel->addItem(i, cn.isEmpty() ? QStringLiteral("角色") : cn, content);
         }
         else
-            m_historyPanel->addItem(i, "记录", line);
+            m_historyPanel->addItem(i, "记录", content);
     }
 
     m_historyPanel->resize(width(), m_historyPanel->height());

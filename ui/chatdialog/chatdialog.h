@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QPoint>
 #include <QScopedPointer>
 #include <QShowEvent>
@@ -52,13 +54,14 @@ private:
     void removeBorder();
     void loadContext();
     void saveContext() const;
-    void appendHistory(const QString &line);
-    QString buildMessageWithContext(const QString &input) const;
+    void appendHistory(const QString &role, const QString &content);
+    QJsonArray buildMessagesArray(const QString &input) const;
     void stopPendingState();
     void sendMessage(const QString &text);
     void refreshCachedAssets();
 
     static int findSentenceEnd(const QString &text, int from);
+    static int estimateTokenCount(const QString &text);
 
     Ui::ChatDialog *ui = nullptr;
     QScopedPointer<HistoryPanel> m_historyPanel;
@@ -72,7 +75,7 @@ private:
     QBuffer *m_audioBuffer = nullptr;
     bool m_recording = false;
 
-    QStringList m_context;
+    QJsonArray m_context;
 
     QString m_lastInput;
     QString m_streamRaw;
