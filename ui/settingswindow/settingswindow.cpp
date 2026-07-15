@@ -555,8 +555,7 @@ void SettingsWindow::setupUi()
     resize(800, 560);
     setAttribute(Qt::WA_TranslucentBackground, false);
 
-    Qt::WindowFlags flags = Qt::Dialog | Qt::WindowStaysOnTopHint;
-    setWindowFlags(flags);
+    setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
 
     /* ── 主布局 ── */
     auto *centralWidget = new QWidget(this);
