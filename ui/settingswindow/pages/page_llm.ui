@@ -13,31 +13,31 @@
     <layout class="QVBoxLayout" name="leftLayout">
      <property name="spacing"><number>8</number></property>
      <item>
-      <widget class="QLabel" name="lblProviderList">
-       <property name="text"><string>服务商列表</string></property>
-       <property name="styleSheet"><string>font-weight: bold; font-size: 13px;</string></property>
-      </widget>
+      <layout class="QHBoxLayout" name="headerLayout">
+       <item>
+        <widget class="QLabel" name="lblProviderList">
+         <property name="text"><string>服务商列表</string></property>
+         <property name="styleSheet"><string>font-weight: bold; font-size: 13px;</string></property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="headerSpacer">
+         <property name="orientation"><enum>Qt::Horizontal</enum></property>
+         <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="btnAddProvider">
+         <property name="text"><string>添加</string></property>
+        </widget>
+       </item>
+      </layout>
      </item>
      <item>
       <widget class="QListWidget" name="listProviders">
        <property name="maximumSize"><size><width>180</width><height>16777215</height></size></property>
        <property name="minimumSize"><size><width>140</width><height>0</height></size></property>
       </widget>
-     </item>
-     <item>
-      <layout class="QHBoxLayout" name="btnLayout">
-       <property name="spacing"><number>6</number></property>
-       <item>
-        <widget class="QPushButton" name="btnAddProvider">
-         <property name="text"><string>添加</string></property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="btnRemoveProvider">
-         <property name="text"><string>删除</string></property>
-        </widget>
-       </item>
-      </layout>
      </item>
     </layout>
    </item>
@@ -98,11 +98,26 @@
          </layout>
         </item>
 
-        <item row="3" column="0" colspan="2">
+        <item row="3" column="0">
          <widget class="QLabel" name="labelStatus">
           <property name="text"><string>请选择或添加一个服务商</string></property>
           <property name="styleSheet"><string>color: #8E8E93; font-size: 12px;</string></property>
          </widget>
+        </item>
+        <item row="3" column="1">
+         <layout class="QHBoxLayout" name="statusBtnLayout">
+          <item>
+           <spacer name="statusSpacer">
+            <property name="orientation"><enum>Qt::Horizontal</enum></property>
+            <property name="sizeHint" stdset="0"><size><width>40</width><height>20</height></size></property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="btnRemoveProvider">
+            <property name="text"><string>删除当前服务商</string></property>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </widget>

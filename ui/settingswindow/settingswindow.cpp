@@ -228,13 +228,13 @@ QComboBox QAbstractItemView {
 /* ── 按钮 ── */
 QPushButton {
     border: 1px solid #DEE2E6;
-    border-radius: 10px;
-    padding: 8px 20px;
+    border-radius: 4px;
+    padding: 3px 10px;
     background-color: #FFFFFF;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 500;
     color: #495057;
-    min-height: 40px;
+    min-height: 24px;
     transition: all 0.2s ease;
 }
 
