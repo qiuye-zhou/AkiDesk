@@ -76,6 +76,7 @@ private:
     bool m_recording = false;
 
     QJsonArray m_context;
+    int m_maxHistoryRecords = 10;
 
     QString m_lastInput;
     QString m_streamRaw;

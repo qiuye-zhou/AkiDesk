@@ -362,7 +362,7 @@ void ChatDialog::appendHistory(const QString &role, const QString &content)
     obj["role"] = role;
     obj["content"] = content;
     m_context.append(obj);
-    while (m_context.size() > 40)
+    while (m_context.size() > m_maxHistoryRecords)
         m_context.removeFirst();
     saveContext();
 }
@@ -836,6 +836,10 @@ void ChatDialog::reloadAiConfig()
     m_ai->setModel(charCfg.value("modelSelect").toString());
 
     JsonConfig globalCfg(GlobalConfigPath);
+
+    m_maxHistoryRecords = globalCfg.value("llm/maxHistoryRecords", 10).toInt();
+    if (m_maxHistoryRecords < 2)
+        m_maxHistoryRecords = 2;
 
     m_stt->setApiKey(globalCfg.value("stt/apiKey").toString());
     m_stt->setSecretKey(globalCfg.value("stt/secretKey").toString());

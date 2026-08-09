@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>PageGeneral</class>
+ <widget class="QWidget" name="PageGeneral">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>500</width><height>400</height></rect>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout">
+   <property name="spacing"><number>10</number></property>
+
+   <item>
+    <widget class="QGroupBox" name="grpChat">
+     <property name="title"><string>对话设置</string></property>
+     <layout class="QFormLayout" name="formLayout">
+      <property name="spacing"><number>10</number></property>
+      <item row="0" column="0">
+       <widget class="QLabel" name="lblMaxHistory">
+        <property name="text"><string>历史记录上限</string></property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QSpinBox" name="spinMaxHistory">
+        <property name="minimum"><number>2</number></property>
+        <property name="maximum"><number>100</number></property>
+        <property name="value"><number>10</number></property>
+        <property name="displayIntegerBase"><number>10</number></property>
+        <property name="maximumWidth"><number>120</number></property>
+        <property name="maximumHeight"><number>26</number></property>
+        <property name="toolTip"><string>对话历史最多保留的条数，超出后自动删除最旧的记录</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

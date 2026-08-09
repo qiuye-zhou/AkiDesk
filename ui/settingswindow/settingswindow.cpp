@@ -6,6 +6,7 @@
 #include "pages/page_character.h"
 #include "pages/page_vits.h"
 #include "pages/page_stt.h"
+#include "pages/page_general.h"
 #include "pages/page_plugin.h"
 #include "pages/page_about.h"
 
@@ -360,12 +361,12 @@ QCheckBox::indicator:hover {
 /* ── 数字微调框 ── */
 QSpinBox {
     border: 1px solid #DEE2E6;
-    border-radius: 10px;
-    padding: 8px 12px;
+    border-radius: 4px;
+    padding: 2px 8px;
     background-color: #FFFFFF;
-    font-size: 14px;
+    font-size: 12px;
     color: #212529;
-    min-height: 40px;
+    min-height: 24px;
     transition: border-color 0.2s ease;
 }
 
@@ -375,12 +376,12 @@ QSpinBox:hover {
 
 QSpinBox:focus {
     border: 2px solid #4DABF7;
-    padding: 7px 11px;
+    padding: 1px 7px;
 }
 
 QSpinBox::up-button, QSpinBox::down-button {
     border: none;
-    width: 24px;
+    width: 16px;
     background: transparent;
 }
 
@@ -552,7 +553,7 @@ SettingsWindow::SettingsWindow(ChatDialog *chat, CharacterWindow *tachie,
 void SettingsWindow::setupUi()
 {
     setWindowTitle("设置");
-    resize(800, 560);
+    resize(700, 500);
     setAttribute(Qt::WA_TranslucentBackground, false);
 
     setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
@@ -566,11 +567,12 @@ void SettingsWindow::setupUi()
     /* ── 左侧边栏 ── */
     m_sidebar = new QListWidget(this);
     m_sidebar->setObjectName("sidebar");
-    m_sidebar->setFixedWidth(200);
+    m_sidebar->setFixedWidth(160);
     m_sidebar->setItemDelegate(new SidebarItemDelegate(m_sidebar));
     m_sidebar->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_sidebar->setIconSize(QSize(0, 0));
 
+    m_sidebar->addItem("通用设置");
     m_sidebar->addItem("对话模型");
     m_sidebar->addItem("角色设置");
     m_sidebar->addItem("语音合成");
@@ -585,7 +587,7 @@ void SettingsWindow::setupUi()
     auto makeScrollable = [this](QWidget *page) -> QScrollArea * {
         auto *container = new QWidget(this);
         auto *containerLayout = new QVBoxLayout(container);
-        containerLayout->setContentsMargins(24, 20, 24, 24);
+        containerLayout->setContentsMargins(18, 16, 18, 18);
         containerLayout->addWidget(page);
 
         auto *scroll = new QScrollArea(this);
@@ -596,6 +598,7 @@ void SettingsWindow::setupUi()
         return scroll;
     };
 
+    auto *pageGeneral = new PageGeneral(this);
     auto *pageLLM = new PageLLM(this);
     auto *pageChar = new PageCharacter(this);
     auto *pageVits = new PageVits(this);
@@ -603,9 +606,10 @@ void SettingsWindow::setupUi()
     auto *pagePlugin = new PagePlugin(this);
     auto *pageAbout = new PageAbout(this);
 
-    for (QWidget *page : {static_cast<QWidget *>(pageLLM), static_cast<QWidget *>(pageChar), static_cast<QWidget *>(pageVits), static_cast<QWidget *>(pageStt), static_cast<QWidget *>(pagePlugin), static_cast<QWidget *>(pageAbout)})
+    for (QWidget *page : {static_cast<QWidget *>(pageGeneral), static_cast<QWidget *>(pageLLM), static_cast<QWidget *>(pageChar), static_cast<QWidget *>(pageVits), static_cast<QWidget *>(pageStt), static_cast<QWidget *>(pagePlugin), static_cast<QWidget *>(pageAbout)})
         page->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::MinimumExpanding);
 
+    m_stack->addWidget(makeScrollable(pageGeneral));
     m_stack->addWidget(makeScrollable(pageLLM));
     m_stack->addWidget(makeScrollable(pageChar));
     m_stack->addWidget(makeScrollable(pageVits));
@@ -641,6 +645,10 @@ void SettingsWindow::setupUi()
 
     /* STT 页面信号：配置变更时通知 ChatDialog 刷新 */
     connect(pageStt, &PageStt::configChanged, this,
+            [this]() { emit requestReloadAi(); });
+
+    /* 通用设置信号：配置变更时通知 ChatDialog 刷新 */
+    connect(pageGeneral, &PageGeneral::configChanged, this,
             [this]() { emit requestReloadAi(); });
 
     /* LLM 页面信号：服务商列表变更时通知角色页面刷新 */

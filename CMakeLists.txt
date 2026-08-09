@@ -63,6 +63,10 @@ set(PROJECT_SOURCES
     ui/settingswindow/settingswindow.cpp
     ui/settingswindow/settingswindow.ui
 
+    ui/settingswindow/pages/page_general.h
+    ui/settingswindow/pages/page_general.cpp
+    ui/settingswindow/pages/page_general.ui
+
     ui/settingswindow/pages/page_llm.h
     ui/settingswindow/pages/page_llm.cpp
     ui/settingswindow/pages/page_llm.ui
