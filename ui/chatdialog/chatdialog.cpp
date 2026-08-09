@@ -277,7 +277,7 @@ void ChatDialog::initWindow()
     ui->btnNext->hide();
     ui->scrollBar->hide();
     new ScrollHelper(ui->textEdit, ui->scrollBar, 5, this);
-    new DragHelper(this);
+    /* 对话框位置固定相对于立绘左上角，不启用独立拖拽 */
 
     /* 同步 scrollBar 与 textEdit 的滚动 */
     connect(ui->scrollBar, &QScrollBar::valueChanged,
@@ -646,6 +646,31 @@ void ChatDialog::on_btnVoice_released()
     ui->textEdit->setText("识别中…");
     ui->btnVoice->setEnabled(false);
     m_stt->recognize(pcmData);
+}
+
+/* 根据立绘图片全局矩形，按比例计算偏移，保持对话框与立绘的相对位置一致 */
+void ChatDialog::updatePositionRelativeToTachie(const QRect &globalTachieRect)
+{
+    /* 以对话框右边缘与立绘左边缘的间距作为比例基准，
+       这样无论立绘如何缩放，对话框与人物之间的视觉间距始终等比 */
+    const double gapRatio = 0.5;  /* 间距 = 立绘宽度 × 0.05 */
+    const double ratioY = 0.08;    /* 对话框底部超出立绘顶部的距离 = 立绘高度 × 0.08 */
+    const int gap = qRound(globalTachieRect.width() * gapRatio);
+    const int offsetY = qRound(globalTachieRect.height() * ratioY);
+    const int newX = globalTachieRect.left() + gap - width();
+    const int newY = globalTachieRect.top() - height() + offsetY;
+
+    /* 历史面板跟随偏移（如果可见） */
+    if (m_historyPanel && m_historyPanel->isVisible())
+    {
+        QPoint oldTopLeft = pos();
+        QPoint newTopLeft(newX, newY);
+        QPoint delta = newTopLeft - oldTopLeft;
+        m_historyPanel->move(m_historyPanel->pos() + delta);
+    }
+
+    move(newX, newY);
+    m_lastPos = QPoint(newX, newY);
 }
 
 void ChatDialog::toggleVisible() { setVisible(!isVisible()); }

@@ -20,16 +20,22 @@ public:
 signals:
     /* 右键点击时请求切换对话框显隐 */
     void requestToggleChat();
+    /* 立绘图片在屏幕上的位置或尺寸发生变化（全局坐标+尺寸） */
+    void tachieGeometryChanged(const QRect &globalTachieRect);
 
 public slots:
     void setTachieImage(const QString &name);
     void setTachieSize(int sizePercent);
     void resetPosition();
 
+    /* 获取立绘图片在屏幕上的全局矩形（位置+尺寸） */
+    QRect tachieGlobalRect() const;
+
 protected:
     void contextMenuEvent(QContextMenuEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
+    void moveEvent(QMoveEvent *event) override;
 
 private:
     void savePosition();

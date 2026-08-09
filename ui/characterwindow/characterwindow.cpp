@@ -214,6 +214,19 @@ void CharacterWindow::setTachieImage(const QString &name)
     tryPlayAnimation(QFileInfo(normalizedName).completeBaseName());
 }
 
+/* 获取立绘图片在屏幕上的全局矩形（位置+尺寸） */
+QRect CharacterWindow::tachieGlobalRect() const
+{
+    return QRect(pos() + m_scaledTopLeft, m_scaledImage.size());
+}
+
+/* 立绘窗口移动时，通知关联组件立绘位置变化 */
+void CharacterWindow::moveEvent(QMoveEvent *event)
+{
+    QWidget::moveEvent(event);
+    emit tachieGeometryChanged(tachieGlobalRect());
+}
+
 /* 设置立绘缩放并居中渲染（预留 2 倍画布供缩放动画使用） */
 void CharacterWindow::setTachieSize(int sizePercent)
 {
@@ -240,6 +253,8 @@ void CharacterWindow::setTachieSize(int sizePercent)
 #else
     clearMask();
 #endif
+
+    emit tachieGeometryChanged(tachieGlobalRect());
 }
 
 /* 右键菜单触发：请求切换对话框显隐 */
@@ -295,6 +310,7 @@ void CharacterWindow::restorePosition()
     if (x >= 0 && y >= 0)
         move(x, y);
     m_positionRestored = true;
+    emit tachieGeometryChanged(tachieGlobalRect());
 }
 
 /* 保存当前立绘窗口位置到 ini */
@@ -309,6 +325,7 @@ void CharacterWindow::resetPosition()
 {
     move(200, 200);
     savePosition();
+    emit tachieGeometryChanged(tachieGlobalRect());
 }
 
 /* 根据表情名查找并播放对应的动画插件 */
@@ -364,6 +381,7 @@ void CharacterWindow::tryPlayAnimation(const QString &actionName)
                         }
                         double p = v.toDouble();
                         move(ms_->base + QPoint(qRound(step.x * p), qRound(step.y * p)));
+                        emit tachieGeometryChanged(tachieGlobalRect());
                     });
             seq->addAnimation(anim);
         }
@@ -408,12 +426,14 @@ void CharacterWindow::tryPlayAnimation(const QString &actionName)
                             scaleState->init = true;
                         }
                         applyFrame(v.toDouble());
+                        emit tachieGeometryChanged(tachieGlobalRect());
                     });
             connect(anim, &QVariantAnimation::finished, this,
-                    [scaleState, applyFrame, step]() {
+                    [scaleState, applyFrame, step, this]() {
                         if (!scaleState->init)
                             return;
                         applyFrame(step.scaleTo);
+                        emit tachieGeometryChanged(tachieGlobalRect());
                     });
             seq->addAnimation(anim);
         }

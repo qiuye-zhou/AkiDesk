@@ -13,6 +13,7 @@
 #include <QMenu>
 #include <QStandardPaths>
 #include <QSystemTrayIcon>
+#include <QTimer>
 
 /* 复制单个资源文件到目标位置 */
 static void copyResourceFile(const QString &resPath, const QString &destPath)
@@ -113,6 +114,14 @@ int main(int argc, char *argv[])
     /* AI 返回心情 → 切换立绘图片 */
     QObject::connect(&chatWin, &ChatDialog::requestSetTachie,
                      &charWin, &CharacterWindow::setTachieImage);
+    /* 立绘位置/大小变化 → 对话框跟随（按比例偏移，固定相对位置） */
+    QObject::connect(&charWin, &CharacterWindow::tachieGeometryChanged,
+                     &chatWin, &ChatDialog::updatePositionRelativeToTachie);
+
+    /* 立绘加载完毕后，初始化对话框位置 */
+    QTimer::singleShot(0, [&]() {
+        chatWin.updatePositionRelativeToTachie(charWin.tachieGlobalRect());
+    });
 
     /* 系统托盘 */
     QSystemTrayIcon tray;

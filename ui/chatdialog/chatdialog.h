@@ -3,6 +3,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QPoint>
+#include <QRect>
 #include <QScopedPointer>
 #include <QShowEvent>
 #include <QStringList>
@@ -31,6 +32,8 @@ public:
 public slots:
     void toggleVisible();
     void reloadAiConfig();
+    /* 根据立绘图片在屏幕上的全局矩形，更新对话框位置（按比例偏移，固定相对位置） */
+    void updatePositionRelativeToTachie(const QRect &globalTachieRect);
 
 signals:
     void requestSetTachie(const QString &moodName);
