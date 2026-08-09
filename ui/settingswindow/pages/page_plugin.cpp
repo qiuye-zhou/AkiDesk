@@ -36,4 +36,7 @@ void PagePlugin::refreshPluginList()
     ui->listErrors->clear();
     for (const QString &err : mgr.errors())
         ui->listErrors->addItem(err);
+
+    /* 没有错误时隐藏错误区域 */
+    ui->grpErrors->setVisible(!mgr.errors().isEmpty());
 }
