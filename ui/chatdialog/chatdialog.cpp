@@ -653,8 +653,8 @@ void ChatDialog::updatePositionRelativeToTachie(const QRect &globalTachieRect)
 {
     /* 以对话框右边缘与立绘左边缘的间距作为比例基准，
        这样无论立绘如何缩放，对话框与人物之间的视觉间距始终等比 */
-    const double gapRatio = 0.5;  /* 间距 = 立绘宽度 × 0.05 */
-    const double ratioY = 0.08;    /* 对话框底部超出立绘顶部的距离 = 立绘高度 × 0.08 */
+    const double gapRatio = 0.42;
+    const double ratioY = 0.16;
     const int gap = qRound(globalTachieRect.width() * gapRatio);
     const int offsetY = qRound(globalTachieRect.height() * ratioY);
     const int newX = globalTachieRect.left() + gap - width();
