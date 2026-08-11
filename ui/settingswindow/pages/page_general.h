@@ -15,6 +15,8 @@ public:
 
 private slots:
     void onMaxHistoryChanged(int value);
+    void onDialogGapRatioChanged(double value);
+    void onDialogOffsetYRatioChanged(double value);
 
 signals:
     void configChanged();

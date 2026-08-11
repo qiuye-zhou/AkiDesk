@@ -359,7 +359,7 @@ QCheckBox::indicator:hover {
 }
 
 /* ── 数字微调框 ── */
-QSpinBox {
+QSpinBox, QDoubleSpinBox {
     border: 1px solid #DEE2E6;
     border-radius: 4px;
     padding: 2px 8px;
@@ -370,16 +370,17 @@ QSpinBox {
     transition: border-color 0.2s ease;
 }
 
-QSpinBox:hover {
+QSpinBox:hover, QDoubleSpinBox:hover {
     border-color: #ADB5BD;
 }
 
-QSpinBox:focus {
+QSpinBox:focus, QDoubleSpinBox:focus {
     border: 2px solid #4DABF7;
     padding: 1px 7px;
 }
 
-QSpinBox::up-button, QSpinBox::down-button {
+QSpinBox::up-button, QSpinBox::down-button,
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button {
     border: none;
     width: 16px;
     background: transparent;

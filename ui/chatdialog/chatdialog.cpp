@@ -651,13 +651,11 @@ void ChatDialog::on_btnVoice_released()
 /* 根据立绘图片全局矩形，按比例计算偏移，保持对话框与立绘的相对位置一致 */
 void ChatDialog::updatePositionRelativeToTachie(const QRect &globalTachieRect)
 {
-    /* 以对话框右边缘与立绘左边缘的间距作为比例基准，
-       这样无论立绘如何缩放，对话框与人物之间的视觉间距始终等比 */
-    const double gapRatio = 0.42;
-    const double ratioY = 0.16;
-    const int gap = qRound(globalTachieRect.width() * gapRatio);
-    const int offsetY = qRound(globalTachieRect.height() * ratioY);
-    const int newX = globalTachieRect.left() + gap - width();
+    m_lastTachieRect = globalTachieRect;
+
+    const int gap = qRound(globalTachieRect.width() * m_dialogGapRatio);
+    const int offsetY = qRound(globalTachieRect.height() * m_dialogOffsetYRatio);
+    const int newX = globalTachieRect.left() - gap - width();
     const int newY = globalTachieRect.top() - height() + offsetY;
 
     /* 历史面板跟随偏移（如果可见） */
@@ -866,6 +864,9 @@ void ChatDialog::reloadAiConfig()
     if (m_maxHistoryRecords < 2)
         m_maxHistoryRecords = 2;
 
+    m_dialogGapRatio = globalCfg.value("dialog/gapRatio", 0.05).toDouble();
+    m_dialogOffsetYRatio = globalCfg.value("dialog/offsetYRatio", 0.08).toDouble();
+
     m_stt->setApiKey(globalCfg.value("stt/apiKey").toString());
     m_stt->setSecretKey(globalCfg.value("stt/secretKey").toString());
 
@@ -879,6 +880,10 @@ void ChatDialog::reloadAiConfig()
 
     loadContext();
     refreshCachedAssets();
+
+    /* 配置变更后，使用新的比例重新定位对话框 */
+    if (!m_lastTachieRect.isNull())
+        updatePositionRelativeToTachie(m_lastTachieRect);
 }
 
 /* 对话框移动时，历史面板跟随移动 */

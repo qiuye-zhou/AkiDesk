@@ -29,6 +29,42 @@
         <property name="toolTip"><string>对话历史最多保留的条数，超出后自动删除最旧的记录</string></property>
        </widget>
       </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="lblDialogGapRatio">
+        <property name="text"><string>对话框水平间距比例</string></property>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QDoubleSpinBox" name="spinDialogGapRatio">
+        <property name="minimum"><double>-1.000000000000000</double></property>
+        <property name="maximum"><double>1.000000000000000</double></property>
+        <property name="singleStep"><double>0.010000000000000</double></property>
+        <property name="decimals"><number>2</number></property>
+        <property name="value"><double>0.050000000000000</double></property>
+        <property name="maximumWidth"><number>120</number></property>
+        <property name="minimumWidth"><number>100</number></property>
+        <property name="maximumHeight"><number>26</number></property>
+        <property name="toolTip"><string>对话框右边缘与立绘左边缘的间距占立绘宽度的比例，正值向外（左侧），负值向内（重叠）</string></property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="lblDialogOffsetYRatio">
+        <property name="text"><string>对话框垂直偏移比例</string></property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QDoubleSpinBox" name="spinDialogOffsetYRatio">
+        <property name="minimum"><double>-1.000000000000000</double></property>
+        <property name="maximum"><double>1.000000000000000</double></property>
+        <property name="singleStep"><double>0.010000000000000</double></property>
+        <property name="decimals"><number>2</number></property>
+        <property name="value"><double>0.080000000000000</double></property>
+        <property name="maximumWidth"><number>120</number></property>
+        <property name="minimumWidth"><number>100</number></property>
+        <property name="maximumHeight"><number>26</number></property>
+        <property name="toolTip"><string>对话框底部超出立绘顶部的距离占立绘高度的比例，正值向下（重叠），负值向上（远离）</string></property>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>

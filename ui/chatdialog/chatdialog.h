@@ -95,4 +95,9 @@ private:
     QStringList m_cachedTachieNames;
     QString m_cachedCharPrompt;
     QString m_cachedCharName;
+
+    /* 对话框相对立绘的位置比例（从全局配置读取） */
+    double m_dialogGapRatio = 0.05;
+    double m_dialogOffsetYRatio = 0.08;
+    QRect m_lastTachieRect;
 };
