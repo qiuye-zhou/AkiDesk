@@ -27,6 +27,7 @@
 #include <QPropertyAnimation>
 #include <QTextCursor>
 #include <QTimer>
+#include <QTime>
 
 #ifdef Q_OS_WIN
 #include <windows.h>
@@ -115,6 +116,7 @@ ChatDialog::ChatDialog(QWidget *parent)
             m_streamRaw.clear();
             m_streamChinese.clear();
             m_vitsCursor = 0;
+            m_greetingPending = false;
             return;
         }
 
@@ -141,6 +143,7 @@ ChatDialog::ChatDialog(QWidget *parent)
             m_streamRaw.clear();
             m_streamChinese.clear();
             m_vitsCursor = 0;
+            m_greetingPending = false;
             return;
         }
 
@@ -171,8 +174,13 @@ ChatDialog::ChatDialog(QWidget *parent)
             }
         }
 
-        /* 保存对话历史 */
-        if (!m_lastInput.isEmpty())
+        /* 保存对话历史（招呼模式下不保存触发提示，仅保留角色回复） */
+        if (m_greetingPending)
+        {
+            m_greetingPending = false;
+            m_lastInput.clear();
+        }
+        else if (!m_lastInput.isEmpty())
         {
             appendHistory("user", m_lastInput);
             m_lastInput.clear();
@@ -192,6 +200,7 @@ ChatDialog::ChatDialog(QWidget *parent)
         m_streamRaw.clear();
         m_streamChinese.clear();
         m_vitsCursor = 0;
+        m_greetingPending = false;
     });
 
     /* 语音识别完成：先在输入框显示识别结果，短暂停留后自动发送 */
@@ -429,6 +438,7 @@ void ChatDialog::stopPendingState()
     m_streamRaw.clear();
     m_streamChinese.clear();
     m_vitsCursor = 0;
+    m_greetingPending = false;
 
     if (m_ai)
         m_ai->cancelAll();
@@ -504,6 +514,67 @@ void ChatDialog::keyReleaseEvent(QKeyEvent *event)
     QWidget::keyReleaseEvent(event);
 }
 
+/* 构造系统提示：角色设定 + 输出格式约束 */
+QString ChatDialog::buildSystemPrompt() const
+{
+    QString sysPrompt;
+    if (!m_cachedCharPrompt.isEmpty())
+        sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
+    sysPrompt += "你是一个桌宠AI，可以帮助用户控制电脑。\n";
+    sysPrompt += "输出格式必须严格按照：心情|中文|日语|||COMMAND:type:value\n";
+    sysPrompt += "心情从以下选择：" + m_cachedTachieNames.join(", ") + "\n";
+    sysPrompt += "示例：开心|好的，我帮你打开网易云音乐！|はい、NetEase Cloud Musicを開きます！|||COMMAND:openapp:网易云音乐\n";
+    sysPrompt += "COMMAND可选，支持：openapp(应用名)、openurl(网址/快捷名)、search(搜索内容)。";
+    return sysPrompt;
+}
+
+/* 启动时根据当前时间自动发送一次招呼：触发提示不记入用户历史，仅保留角色回复 */
+void ChatDialog::sendGreeting()
+{
+    if (!m_ai)
+        return;
+
+    const QTime now = QTime::currentTime();
+    const int hour = now.hour();
+    QString timeDesc;
+    if (hour >= 5 && hour < 11)
+        timeDesc = QStringLiteral("早晨（%1）").arg(now.toString("HH:mm"));
+    else if (hour >= 11 && hour < 14)
+        timeDesc = QStringLiteral("中午（%1）").arg(now.toString("HH:mm"));
+    else if (hour >= 14 && hour < 18)
+        timeDesc = QStringLiteral("下午（%1）").arg(now.toString("HH:mm"));
+    else if (hour >= 18 && hour < 22)
+        timeDesc = QStringLiteral("晚上（%1）").arg(now.toString("HH:mm"));
+    else
+        timeDesc = QStringLiteral("深夜（%1）").arg(now.toString("HH:mm"));
+
+    const QString prompt = QStringLiteral(
+        "（系统提示：现在是%1，请以角色身份主动向用户打一声招呼，"
+        "自然地结合当前时间段，语气符合角色性格。"
+        "只回复一句简短的招呼，不要询问用户需要什么帮助，也不要执行任何命令。）").arg(timeDesc);
+
+    ui->labelName->setText(m_cachedCharName.isEmpty() ? QStringLiteral("角色") : m_cachedCharName);
+    ui->textEdit->setEnabled(false);
+    ui->btnNext->hide();
+
+    m_ai->setSystemPrompt(buildSystemPrompt());
+
+    JsonConfig charCfg(CurrentCharacterUserConfig());
+    m_vitsEnabled = charCfg.value("vitsEnable").toBool();
+    JsonConfig globalCfg(GlobalConfigPath);
+    m_vitsSentenceSplit = globalCfg.value("vits/SentenceSplit", true).toBool();
+    m_streamRaw.clear();
+    m_streamChinese.clear();
+    m_vitsCursor = 0;
+
+    /* 招呼由系统触发，不作为用户消息保存到历史 */
+    m_lastInput.clear();
+    m_greetingPending = true;
+
+    m_ai->chat(buildMessagesArray(prompt));
+    ui->textEdit->setText("……");
+}
+
 /* 发送用户消息给 AI（供键盘输入和语音识别共用） */
 void ChatDialog::sendMessage(const QString &text)
 {
@@ -514,15 +585,7 @@ void ChatDialog::sendMessage(const QString &text)
     ui->textEdit->setEnabled(false);
     ui->btnNext->hide();
 
-    QString sysPrompt;
-    if (!m_cachedCharPrompt.isEmpty())
-        sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
-    sysPrompt += "你是一个桌宠AI，可以帮助用户控制电脑。\n";
-    sysPrompt += "输出格式必须严格按照：心情|中文|日语|||COMMAND:type:value\n";
-    sysPrompt += "心情从以下选择：" + m_cachedTachieNames.join(", ") + "\n";
-    sysPrompt += "示例：开心|好的，我帮你打开网易云音乐！|はい、NetEase Cloud Musicを開きます！|||COMMAND:openapp:网易云音乐\n";
-    sysPrompt += "COMMAND可选，支持：openapp(应用名)、openurl(网址/快捷名)、search(搜索内容)。";
-    m_ai->setSystemPrompt(sysPrompt);
+    m_ai->setSystemPrompt(buildSystemPrompt());
 
     /* 初始化本轮对话状态 */
     m_lastInput = text;

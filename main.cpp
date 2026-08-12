@@ -123,6 +123,11 @@ int main(int argc, char *argv[])
         chatWin.updatePositionRelativeToTachie(charWin.tachieGlobalRect());
     });
 
+    /* 启动后根据当前时间自动发送一次招呼 */
+    QTimer::singleShot(800, [&]() {
+        chatWin.sendGreeting();
+    });
+
     /* 系统托盘 */
     QSystemTrayIcon tray;
     tray.setIcon(QIcon(":/assets/logo.png"));

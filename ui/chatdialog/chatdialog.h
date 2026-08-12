@@ -29,6 +29,9 @@ public:
 
     void setVisible(bool visible) override;
 
+    /* 启动时根据当前时间自动发送一次招呼 */
+    void sendGreeting();
+
 public slots:
     void toggleVisible();
     void reloadAiConfig();
@@ -62,6 +65,7 @@ private:
     void stopPendingState();
     void sendMessage(const QString &text);
     void refreshCachedAssets();
+    QString buildSystemPrompt() const;
 
     static int findSentenceEnd(const QString &text, int from);
     static int estimateTokenCount(const QString &text);
@@ -87,6 +91,9 @@ private:
     bool m_vitsEnabled = false;
     bool m_vitsSentenceSplit = true;
     int m_vitsCursor = 0;
+
+    /* 当前回合是否为启动招呼（不保存触发提示到用户历史） */
+    bool m_greetingPending = false;
 
     bool m_historyVisible = false;
     QPoint m_lastPos;
