@@ -17,6 +17,7 @@
 #include <QCloseEvent>
 #include <QDir>
 #include <QGraphicsOpacityEffect>
+#include <QHash>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -56,6 +57,10 @@ ChatDialog::ChatDialog(QWidget *parent)
 
     /* 初始化 VITS 语音引擎 */
     m_vits = new VitsEngine(this);
+    connect(m_vits, &VitsEngine::errorOccurred, this, [this](const QString &err) {
+        /* 语音错误只输出到调试，避免打断正常对话显示 */
+        qWarning() << "[VITS]" << err;
+    });
 
     /* 初始化语音识别引擎 */
     m_stt = new SpeechRecognizer(this);
@@ -151,16 +156,45 @@ ChatDialog::ChatDialog(QWidget *parent)
         ui->btnNext->show();
 
         /* 补漏：如果最后一段没有句末标点，在结束时补一次合成 */
-        if (m_vitsEnabled && m_vitsSentenceSplit)
+        if (m_vitsEnabled)
         {
-            const QString remain = japanese.mid(qMax(0, m_vitsCursor)).trimmed();
-            if (!remain.isEmpty())
-                m_vits->enqueueAndPlay(remain);
+            if (m_vitsSentenceSplit)
+            {
+                const QString remain = japanese.mid(qMax(0, m_vitsCursor)).trimmed();
+                if (!remain.isEmpty())
+                    m_vits->enqueueAndPlay(remain);
+            }
+            else if (!japanese.isEmpty())
+            {
+                m_vits->enqueueAndPlay(japanese);
+            }
+
+            /* VITS 已启用但 AI 未返回日语：用中文兜底合成 */
+            if (japanese.isEmpty() && !chinese.isEmpty())
+                m_vits->enqueueAndPlay(chinese);
         }
-        else if (m_vitsEnabled && !japanese.isEmpty())
-        {
-            m_vits->enqueueAndPlay(japanese);
-        }
+
+        /* mood 容错：将常见的中文心情名映射到英文立绘名 */
+        static const QHash<QString, QString> kMoodMap = {
+            {QStringLiteral("开心"), QStringLiteral("happy")},
+            {QStringLiteral("高兴"), QStringLiteral("happy")},
+            {QStringLiteral("快乐"), QStringLiteral("happy")},
+            {QStringLiteral("愤怒"), QStringLiteral("angry")},
+            {QStringLiteral("生气"), QStringLiteral("angry")},
+            {QStringLiteral("害羞"), QStringLiteral("shy")},
+            {QStringLiteral("羞涩"), QStringLiteral("shy")},
+            {QStringLiteral("正常"), QStringLiteral("default")},
+            {QStringLiteral("平静"), QStringLiteral("default")},
+            {QStringLiteral("普通"), QStringLiteral("default")},
+            {QStringLiteral("默认"), QStringLiteral("default")},
+            {QStringLiteral("中性"), QStringLiteral("default")},
+        };
+        if (kMoodMap.contains(mood))
+            mood = kMoodMap.value(mood);
+
+        /* mood 为空时兜底为 default */
+        if (mood.isEmpty())
+            mood = QStringLiteral("default");
 
         emit requestSetTachie(mood);
 
@@ -520,11 +554,32 @@ QString ChatDialog::buildSystemPrompt() const
     QString sysPrompt;
     if (!m_cachedCharPrompt.isEmpty())
         sysPrompt += "角色设定：" + m_cachedCharPrompt + "\n请始终保持该设定进行回复。\n\n";
-    sysPrompt += "你是一个桌宠AI，可以帮助用户控制电脑。\n";
-    sysPrompt += "输出格式必须严格按照：心情|中文|日语|||COMMAND:type:value\n";
-    sysPrompt += "心情从以下选择：" + m_cachedTachieNames.join(", ") + "\n";
-    sysPrompt += "示例：开心|好的，我帮你打开网易云音乐！|はい、NetEase Cloud Musicを開きます！|||COMMAND:openapp:网易云音乐\n";
-    sysPrompt += "COMMAND可选，支持：openapp(应用名)、openurl(网址/快捷名)、search(搜索内容)。";
+    sysPrompt += "你是一个桌宠AI，可以帮助用户控制电脑。\n\n";
+    sysPrompt += "【输出格式 - 必须严格遵守】\n";
+    sysPrompt += "心情|中文|日语|||COMMAND:type:value\n\n";
+    sysPrompt += "【格式规则】\n";
+    sysPrompt += "1. 心情：必须从以下列表中选择一个（英文，原样输出）：" + m_cachedTachieNames.join(", ") + "\n";
+    sysPrompt += "   禁止输出中文心情名（如 开心、正常 等），必须使用列表中的英文单词。\n";
+    sysPrompt += "2. 中文：角色的中文回复内容。\n";
+    sysPrompt += "3. 日语：与中文内容含义相同的日语翻译，不能为空，不能和中文相同。\n";
+    sysPrompt += "4. 三个竖线 ||| 是分隔符，COMMAND 部分可选。\n";
+    sysPrompt += "5. COMMAND 支持：openapp(应用名)、openurl(网址/快捷名)、search(搜索内容)。\n\n";
+
+    /* 构造示例：mood 用实际存在的立绘名 */
+    QString exampleMood = QStringLiteral("default");
+    for (const QString &n : m_cachedTachieNames)
+    {
+        if (n.compare(QStringLiteral("default"), Qt::CaseInsensitive) != 0)
+        {
+            exampleMood = n;
+            break;
+        }
+    }
+    sysPrompt += "【示例】\n";
+    sysPrompt += QString("%1|好的，我帮你打开网易云音乐！|はい、NetEase Cloud Musicを開きます！|||COMMAND:openapp:网易云音乐\n")
+                     .arg(exampleMood);
+    sysPrompt += QString("default|早上好呀！今天天气真不错呢。|おはようございます！今日はいいお天気ですね。\n");
+    sysPrompt += QString("default|嗯，我在听，你说吧。|うん、聞いてるよ、話して。\n");
     return sysPrompt;
 }
 
@@ -551,7 +606,9 @@ void ChatDialog::sendGreeting()
     const QString prompt = QStringLiteral(
         "（系统提示：现在是%1，请以角色身份主动向用户打一声招呼，"
         "自然地结合当前时间段，语气符合角色性格。"
-        "只回复一句简短的招呼，不要询问用户需要什么帮助，也不要执行任何命令。）").arg(timeDesc);
+        "只回复一句简短的招呼，不要询问用户需要什么帮助，也不要执行任何命令。"
+        "注意：输出必须严格遵循 心情|中文|日语 的格式，"
+        "中文与日语内容含义必须一致，日语部分不能为空。）").arg(timeDesc);
 
     ui->labelName->setText(m_cachedCharName.isEmpty() ? QStringLiteral("角色") : m_cachedCharName);
     ui->textEdit->setEnabled(false);

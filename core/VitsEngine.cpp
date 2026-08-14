@@ -38,6 +38,19 @@ VitsEngine::VitsEngine(QObject *parent)
                     self->startNextPlayback();
                 }
             });
+    connect(m_player, &QMediaPlayer::errorOccurred, this,
+            [self](QMediaPlayer::Error, const QString &errorString) {
+                if (!self)
+                    return;
+                emit self->errorOccurred(QStringLiteral("语音播放失败：%1").arg(errorString));
+                /* 出错后继续下一段，避免卡死整个队列 */
+                if (self->m_currentFile)
+                {
+                    self->m_currentFile->deleteLater();
+                    self->m_currentFile = nullptr;
+                }
+                self->startNextPlayback();
+            });
 }
 
 VitsEngine::~VitsEngine()
@@ -92,8 +105,22 @@ void VitsEngine::startNextSynthesis()
     if (m_stopped || m_synthesizing || m_pendingTexts.isEmpty())
         return;
 
-    m_synthesizing = true;
     const QString text = m_pendingTexts.takeFirst();
+
+    if (m_apiUrl.trimmed().isEmpty())
+    {
+        emit errorOccurred(QStringLiteral("VITS 未配置 API 地址，请在设置页面填写 VITS API URL"));
+        startNextSynthesis();
+        return;
+    }
+    if (m_speaker.trimmed().isEmpty())
+    {
+        emit errorOccurred(QStringLiteral("VITS 未选择说话人，请在角色设置中选择 VITS 模型"));
+        startNextSynthesis();
+        return;
+    }
+
+    m_synthesizing = true;
 
     QString base = m_apiUrl.endsWith('/') ? m_apiUrl.chopped(1) : m_apiUrl;
     QString url = QString("%1/voice/vits?text=%2&id=%3")
