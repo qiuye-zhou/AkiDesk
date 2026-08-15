@@ -9,18 +9,13 @@
 - **立绘展示** - 支持自定义角色立绘，可拖拽移动，支持透明无边框窗口
 - **AI 对话** - 支持 OpenAI 兼容 API（如 DeepSeek、通义千问等），支持流式响应和多轮对话
 - **Token 优化** - 智能历史对话管理，自动裁剪旧对话，控制单次请求 token 数量
+- **启动招呼** - 应用启动后根据当前时段（早/中/下午/晚/深夜）自动发送一次招呼
 - **语音合成** - 集成 VITS 语音合成引擎，支持按句合成和队列播放
 - **语音识别** - 集成百度语音识别 API，支持实时语音输入
 - **动画系统** - 支持插件化动画扩展，可自定义动画效果
 - **对话控制** - AI 可控制打开网站和应用程序（通过桌面/开始菜单快捷方式）
-- **丰富设置** - 提供角色、LLM、VITS、STT 等多项配置
-
-### 特色亮点
-
-- **多角色支持** - 可创建多个角色，每个角色拥有独立的立绘、Prompt 和对话上下文
-- **心情联动** - AI 回复可自动触发不同的立绘动画效果
-- **系统托盘** - 后台运行，右键托盘图标快速访问设置
-- **跨平台** - 支持 Windows 和 Linux 平台
+- **心情联动** - AI 回复可自动触发不同的立绘图片与动画效果，并支持中文心情名容错映射
+- **丰富设置** - 提供角色、LLM、VITS、STT、通用等多项配置
 
 ## 技术栈
 
@@ -47,24 +42,25 @@ AkiDesk/
 │   │   │   └── Plugin/
 │   │   │       └── Anime/
 │   │   │           └── Basic Animation Package.json
-│   │   └── config.ini         # 默认配置文件
+│   │   └── config.ini         # 默认本地配置文件
 │   ├── logo.png               # 应用图标
 │   └── resources.qrc          # Qt 资源文件
 ├── config/                    # 配置管理模块
 │   ├── AppPaths.h             # 应用路径常量
 │   └── JsonConfig.cpp/h       # JSON 配置解析（支持嵌套路径）
 ├── core/                      # 核心功能模块
-│   ├── AiProvider.cpp/h       # AI 对话接口（OpenAI 兼容，支持多轮对话）
+│   ├── AiProvider.cpp/h       # AI 对话接口（OpenAI 兼容，支持流式与多轮）
 │   ├── VitsEngine.cpp/h       # VITS 语音合成引擎
 │   ├── SpeechRecognizer.cpp/h # 百度语音识别
 │   └── CommandExecutor.cpp/h  # 命令执行器（网站/应用控制）
 ├── ui/                        # 用户界面模块
 │   ├── characterwindow/       # 立绘窗口（透明、可拖拽、无边框）
 │   ├── chatdialog/            # 聊天对话框
-│   │   ├── chatdialog.*       # 主对话框
+│   │   ├── chatdialog.*       # 主对话框（含启动招呼）
 │   │   └── historypanel.*     # 历史记录面板
 │   └── settingswindow/        # 设置窗口
 │       └── pages/             # 各设置页面
+│           ├── page_general.* # 通用配置页
 │           ├── page_llm.*     # LLM 配置页
 │           ├── page_character.* # 角色配置页
 │           ├── page_vits.*    # VITS 配置页
@@ -97,6 +93,7 @@ AkiDesk/
 - **C++17 编译器**
   - Windows: MSVC 2019+ 或 MinGW
   - Linux: GCC 9+ 或 Clang 10+
+- Linux 额外依赖：X11（`libx11-dev`、`libxext-dev`）
 
 ## 使用说明
 
@@ -115,8 +112,7 @@ AkiDesk/
 
 ```
 ~/Documents/AkiDesk/
-├── config.json              # 全局配置（API Key 等，可迁移）
-├── config.ini               # 本地配置（窗口位置等，不可迁移）
+├── config.ini               # 本地配置（当前选中角色、窗口位置等，不可迁移）
 ├── Character/               # 角色资产目录
 │   ├── Atri/                # 默认角色
 │   │   ├── config.json      # 角色配置（Prompt、动画绑定）
@@ -124,11 +120,13 @@ AkiDesk/
 │   │   └── Tachie/          # 立绘图片目录
 │   │       └── default.png  # 默认立绘
 │   └── Config/              # 用户运行配置
-│       └── config.json      # 当前角色设置（立绘大小、模型选择等）
+│       └── config.json      # 当前角色设置（立绘大小、模型选择、VITS 开关等）
 └── Plugin/                  # 插件目录
     └── Anime/               # 动画插件
         └── Basic Animation Package.json
 ```
+
+> 注意：应用不在根目录存放全局 config.json，用户可迁移的配置统一放在 `Character/Config/config.json`。
 
 ### 角色配置
 
@@ -138,7 +136,7 @@ AkiDesk/
 
 ```json
 {
-  "prompt": "你是一个活泼的高中女生...",
+  "prompt": "以下是一个初步的角色定位……",
   "tachieAnimations": {
     "default": "Basic Animation Package_轻微放大缩小",
     "happy": "Basic Animation Package_上抬下落",
@@ -149,7 +147,7 @@ AkiDesk/
 ```
 
 - `prompt`: 角色 Prompt，定义角色的性格和行为
-- `tachieAnimations`: 心情与动画的映射关系
+- `tachieAnimations`: 心情与动画的映射关系，key 为心情名（对应 `Tachie/` 下的图片名），value 为动画插件名_动画名
 
 #### `context.json` - 对话上下文
 
@@ -168,39 +166,14 @@ AkiDesk/
 
 #### `Tachie/` - 立绘图片
 
-支持 PNG 格式，必须使用透明背景的立绘图片。
+支持 PNG 格式，必须使用透明背景的立绘图片。文件名即心情名，例如：
 
-### AI 对话系统
+- `default.png` - 默认/平静
+- `happy.png` - 开心
+- `angry.png` - 愤怒
+- `shy.png` - 害羞
 
-#### Token 优化策略
-
-为节省 API 费用，应用采用以下优化策略：
-
-- **轮数限制**: 最多保留最近 6 轮对话
-- **Token 预算**: 单次请求总 token 不超过 3000
-- **智能裁剪**: 超过预算时自动丢弃最旧的历史消息
-- **精简提示词**: 系统提示词压缩为简洁指令
-
-#### 输出格式
-
-AI 回复采用严格的管道分隔格式：
-
-```
-心情|中文|日语|||COMMAND:type:value
-```
-
-- **心情**: 从角色配置的心情列表中选择（如 happy、angry、shy）
-- **中文**: AI 的中文回复内容
-- **日语**: 中文内容的日语翻译（用于 VITS 语音合成）
-- **COMMAND**: 可选的命令执行部分
-
-#### 支持的命令
-
-| 命令类型 | 格式 | 示例 |
-|----------|------|------|
-| 打开应用 | `COMMAND:openapp:应用名` | `COMMAND:openapp:网易云音乐` |
-| 打开网站 | `COMMAND:openurl:网址/快捷名` | `COMMAND:openurl:b站` |
-| 搜索 | `COMMAND:search:搜索内容` | `COMMAND:search:人工智能` |
+启动招呼与 AI 回复中的心情会触发对应图片切换；若图片不存在则回退到 `default.png`。
 
 ### 动画插件系统
 
@@ -262,6 +235,8 @@ AI 回复采用严格的管道分隔格式：
 - 模型名称
 - 说话人 ID
 
+> 启用 VITS 前需在「角色设置」中选择对应的 VITS 模型（speaker）。若未配置 API URL 或说话人，合成请求会被拦截并提示。
+
 #### 语音识别配置
 
 使用百度语音识别 API：
@@ -281,13 +256,7 @@ AI 回复采用严格的管道分隔格式：
   - 优先精确匹配
   - 其次包含匹配
   - 最后字符全匹配
-- **过滤规则**: 自动过滤包含"卸载"、"uninstall"、"remove"等关键词的快捷方式
-
-### 快捷操作
-
-- **右键立绘**: 显示/隐藏对话框
-- **左键托盘图标**: 打开设置
-- **右键托盘图标**: 显示菜单（设置、退出）
+- **过滤规则**: 自动过滤包含"卸载"、"uninstall"、"remove"、"删除"等关键词的快捷方式
 
 ## 常见问题
 
@@ -295,20 +264,25 @@ AI 回复采用严格的管道分隔格式：
 
 A: 检查立绘图片是否存在于 `Character/<角色名>/Tachie/` 目录，确保图片格式为 PNG 且包含透明背景。
 
+### Q: 立绘心情一直不变？
+
+A: 检查 `Tachie/` 目录下是否有对应心情名的图片（如 `happy.png`、`angry.png`）。若只有 `default.png`，即使 AI 正确输出心情名也会回退到默认立绘。
+
 ### Q: AI 对话无响应？
 
 A: 检查以下项目：
 - API URL 是否正确
 - API Key 是否有效
 - 网络连接是否正常
-- 是否触发了请求超时
+- 是否触发了请求超时（默认 60 秒）
 
 ### Q: 语音合成无法工作？
 
 A: 确保：
-- VITS API 服务已正确部署
-- API URL 可访问
+- 在「角色设置」中已勾选「启用 VITS」并选择了 VITS 模型
+- VITS API 服务已正确部署且可访问
 - 说话人 ID 正确
+- AI 回复包含日语段（若缺失会用中文兜底合成，但效果取决于 VITS 模型是否支持中文）
 
 ### Q: 如何添加新角色？
 
