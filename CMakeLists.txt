@@ -29,23 +29,23 @@ set(PROJECT_SOURCES
     config/JsonConfig.h
     config/JsonConfig.cpp
 
-    core/AiProvider.h
-    core/AiProvider.cpp
-    core/CommandExecutor.h
-    core/CommandExecutor.cpp
-    core/SpeechRecognizer.h
-    core/SpeechRecognizer.cpp
-    core/VitsEngine.h
-    core/VitsEngine.cpp
+    core/ai/AiProvider.h
+    core/ai/AiProvider.cpp
+    core/audio/SpeechRecognizer.h
+    core/audio/SpeechRecognizer.cpp
+    core/audio/VitsEngine.h
+    core/audio/VitsEngine.cpp
+    core/system/CommandExecutor.h
+    core/system/CommandExecutor.cpp
 
-    utils/DragHelper.h
-    utils/DragHelper.cpp
-    utils/ScrollHelper.h
-    utils/ScrollHelper.cpp
-    utils/AnimePlugin.h
-    utils/AnimePlugin.cpp
-    utils/PluginManager.h
-    utils/PluginManager.cpp
+    utils/plugin/AnimePlugin.h
+    utils/plugin/AnimePlugin.cpp
+    utils/plugin/PluginManager.h
+    utils/plugin/PluginManager.cpp
+    utils/ui/DragHelper.h
+    utils/ui/DragHelper.cpp
+    utils/ui/ScrollHelper.h
+    utils/ui/ScrollHelper.cpp
 
     ui/characterwindow/characterwindow.h
     ui/characterwindow/characterwindow.cpp
@@ -55,41 +55,41 @@ set(PROJECT_SOURCES
     ui/chatdialog/chatdialog.cpp
     ui/chatdialog/chatdialog.ui
 
-    ui/chatdialog/historypanel.h
-    ui/chatdialog/historypanel.cpp
-    ui/chatdialog/historypanel.ui
+    ui/chatdialog/components/historypanel.h
+    ui/chatdialog/components/historypanel.cpp
+    ui/chatdialog/components/historypanel.ui
 
     ui/settingswindow/settingswindow.h
     ui/settingswindow/settingswindow.cpp
     ui/settingswindow/settingswindow.ui
 
-    ui/settingswindow/pages/page_general.h
-    ui/settingswindow/pages/page_general.cpp
-    ui/settingswindow/pages/page_general.ui
+    ui/settingswindow/pages/general/page_general.h
+    ui/settingswindow/pages/general/page_general.cpp
+    ui/settingswindow/pages/general/page_general.ui
 
-    ui/settingswindow/pages/page_llm.h
-    ui/settingswindow/pages/page_llm.cpp
-    ui/settingswindow/pages/page_llm.ui
+    ui/settingswindow/pages/general/page_about.h
+    ui/settingswindow/pages/general/page_about.cpp
+    ui/settingswindow/pages/general/page_about.ui
 
-    ui/settingswindow/pages/page_character.h
-    ui/settingswindow/pages/page_character.cpp
-    ui/settingswindow/pages/page_character.ui
+    ui/settingswindow/pages/ai/page_llm.h
+    ui/settingswindow/pages/ai/page_llm.cpp
+    ui/settingswindow/pages/ai/page_llm.ui
 
-    ui/settingswindow/pages/page_vits.h
-    ui/settingswindow/pages/page_vits.cpp
-    ui/settingswindow/pages/page_vits.ui
+    ui/settingswindow/pages/ai/page_stt.h
+    ui/settingswindow/pages/ai/page_stt.cpp
+    ui/settingswindow/pages/ai/page_stt.ui
 
-    ui/settingswindow/pages/page_stt.h
-    ui/settingswindow/pages/page_stt.cpp
-    ui/settingswindow/pages/page_stt.ui
+    ui/settingswindow/pages/ai/page_vits.h
+    ui/settingswindow/pages/ai/page_vits.cpp
+    ui/settingswindow/pages/ai/page_vits.ui
 
-    ui/settingswindow/pages/page_plugin.h
-    ui/settingswindow/pages/page_plugin.cpp
-    ui/settingswindow/pages/page_plugin.ui
+    ui/settingswindow/pages/character/page_character.h
+    ui/settingswindow/pages/character/page_character.cpp
+    ui/settingswindow/pages/character/page_character.ui
 
-    ui/settingswindow/pages/page_about.h
-    ui/settingswindow/pages/page_about.cpp
-    ui/settingswindow/pages/page_about.ui
+    ui/settingswindow/pages/character/page_plugin.h
+    ui/settingswindow/pages/character/page_plugin.cpp
+    ui/settingswindow/pages/character/page_plugin.ui
 
     assets/resources.qrc
 )

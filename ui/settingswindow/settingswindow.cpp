@@ -2,13 +2,13 @@
 #include "ui/chatdialog/chatdialog.h"
 #include "ui/characterwindow/characterwindow.h"
 
-#include "pages/page_llm.h"
-#include "pages/page_character.h"
-#include "pages/page_vits.h"
-#include "pages/page_stt.h"
-#include "pages/page_general.h"
-#include "pages/page_plugin.h"
-#include "pages/page_about.h"
+#include "pages/ai/page_llm.h"
+#include "pages/character/page_character.h"
+#include "pages/ai/page_vits.h"
+#include "pages/ai/page_stt.h"
+#include "pages/general/page_general.h"
+#include "pages/character/page_plugin.h"
+#include "pages/general/page_about.h"
 
 #include <QApplication>
 #include <QCloseEvent>

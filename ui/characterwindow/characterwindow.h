@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/PluginManager.h"
+#include "utils/plugin/PluginManager.h"
 
 #include <QWidget>
 

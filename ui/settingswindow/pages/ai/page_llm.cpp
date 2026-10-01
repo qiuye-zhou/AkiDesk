@@ -3,7 +3,7 @@
 
 #include "config/AppPaths.h"
 #include "config/JsonConfig.h"
-#include "core/AiProvider.h"
+#include "core/ai/AiProvider.h"
 
 #include <QJsonArray>
 #include <QJsonObject>

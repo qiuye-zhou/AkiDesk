@@ -1,16 +1,16 @@
 #include "chatdialog.h"
 #include "ui_chatdialog.h"
-#include "historypanel.h"
+#include "components/historypanel.h"
 
 #include "config/AppPaths.h"
 #include "config/JsonConfig.h"
-#include "core/AiProvider.h"
-#include "core/CommandExecutor.h"
-#include "core/SpeechRecognizer.h"
-#include "core/VitsEngine.h"
-#include "ui/settingswindow/pages/page_llm.h"
-#include "utils/DragHelper.h"
-#include "utils/ScrollHelper.h"
+#include "core/ai/AiProvider.h"
+#include "core/system/CommandExecutor.h"
+#include "core/audio/SpeechRecognizer.h"
+#include "core/audio/VitsEngine.h"
+#include "ui/settingswindow/pages/ai/page_llm.h"
+#include "utils/ui/DragHelper.h"
+#include "utils/ui/ScrollHelper.h"
 
 #include <QAudioSource>
 #include <QBuffer>

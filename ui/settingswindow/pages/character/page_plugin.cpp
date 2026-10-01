@@ -1,7 +1,7 @@
 #include "page_plugin.h"
 #include "ui_page_plugin.h"
 
-#include "utils/PluginManager.h"
+#include "utils/plugin/PluginManager.h"
 
 #include <QMessageBox>
 

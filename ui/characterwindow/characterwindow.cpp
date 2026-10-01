@@ -3,7 +3,7 @@
 
 #include "config/AppPaths.h"
 #include "config/JsonConfig.h"
-#include "utils/DragHelper.h"
+#include "utils/ui/DragHelper.h"
 
 #include <QBitmap>
 #include <QDir>
